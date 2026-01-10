@@ -47,13 +47,12 @@ const inicializarBaseDatos = async () => {
       console.log("🌱 Insertando datos iniciales...\n");
 
       // Crear usuario administrador por defecto
-      const passwordHash = await bcrypt.hash("Admin123!", 10);
-
+      // El hook beforeCreate del modelo se encarga de hashear la contraseña
       const admin = await db.Usuario.create({
         nombre: "Administrador",
         apellido: "Sistema",
         email: "admin@sistema.edu.do",
-        password_hash: passwordHash,
+        password_hash: "Admin123!",
         rol: ROLES.ADMIN,
         categoria_personal: CATEGORIAS_PERSONAL.DIRECTIVO,
         activo: true,

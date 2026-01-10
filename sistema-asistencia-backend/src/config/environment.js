@@ -35,6 +35,7 @@ export default {
   // SIGERD
   sigerd: {
     baseUrl: process.env.SIGERD_BASE_URL || 'https://sigerd.minerd.gob.do',
+    loginEndpoint: process.env.SIGERD_LOGIN_ENDPOINT || '/Account/CargarInformacion',
     username: process.env.SIGERD_USERNAME,
     password: process.env.SIGERD_PASSWORD,
     centroId: process.env.SIGERD_CENTRO_ID,
