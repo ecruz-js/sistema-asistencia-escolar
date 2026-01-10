@@ -9,6 +9,7 @@ import { requestLogger } from "./middlewares/logger.js";
 import { notFound, errorHandler } from "./middlewares/errorHandler.js";
 import authRoutes from "./routes/auth.routes.js";
 import sigerdRoutes from "./routes/sigerd.routes.js";
+import usuarioRoutes from "./routes/usuario.routes.js";
 
 const app = express();
 
@@ -80,7 +81,7 @@ app.use(`${API_PREFIX}/auth`, authRoutes);
 
 // Rutas de SIGERD
 app.use(`${API_PREFIX}/sigerd`, sigerdRoutes);
-// app.use(`${API_PREFIX}/usuarios`, usuarioRoutes);
+app.use(`${API_PREFIX}/usuarios`, usuarioRoutes);
 // app.use(`${API_PREFIX}/grados`, gradoRoutes);
 // app.use(`${API_PREFIX}/estudiantes`, estudianteRoutes);
 // app.use(`${API_PREFIX}/asistencia`, asistenciaRoutes);
