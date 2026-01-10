@@ -14,11 +14,15 @@ import gradoRoutes from "./routes/grado.routes.js";
 import estudianteRoutes from "./routes/estudiante.routes.js";
 import asistenciaRoutes from "./routes/asistencia.routes.js";
 import notificacionRoutes from "./routes/notificacion.routes.js";
+import direccionRoutes from "./routes/direccion.routes.js";
+import minerdRoutes from "./routes/minerd.routes.js";
+// import configuracionRoutes from "./routes/configuracion.routes.js";
+import reporteRoutes from "./routes/reporte.routes.js";
 
 const app = express();
 
 // ============================================
-// MIDDLEWARES GLOBALES
+// MIDDLEWARES GLOBALES 
 // ============================================
 
 // Seguridad con Helmet
@@ -90,8 +94,8 @@ app.use(`${API_PREFIX}/grados`, gradoRoutes);
 app.use(`${API_PREFIX}/estudiantes`, estudianteRoutes);
 app.use(`${API_PREFIX}/asistencia`, asistenciaRoutes);
 app.use(`${API_PREFIX}/notificaciones`, notificacionRoutes);
-// app.use(`${API_PREFIX}/direccion`, direccionRoutes);
-// app.use(`${API_PREFIX}/minerd`, minerdRoutes);
+app.use(`${API_PREFIX}/direccion`, direccionRoutes);
+app.use(`${API_PREFIX}/minerd`, minerdRoutes);
 // app.use(`${API_PREFIX}/configuracion`, configuracionRoutes);
 // app.use(`${API_PREFIX}/reportes`, reporteRoutes);
 
