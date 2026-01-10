@@ -2,6 +2,7 @@ import app from "./app.js";
 import env from "./config/environment.js";
 import db from "./models/index.js";
 import logger from "./utils/logger.js";
+import inicializarTareas from "./jobs/index.js";
 
 const PORT = env.port;
 
@@ -12,6 +13,9 @@ const iniciarServidor = async () => {
     logger.info("🔄 Conectando a la base de datos...");
     await db.sequelize.authenticate();
     logger.info("✅ Conexión a base de datos exitosa");
+
+    // Inicializar tareas programadas
+    await inicializarTareas();
 
     // Iniciar servidor
     app.listen(PORT, () => {

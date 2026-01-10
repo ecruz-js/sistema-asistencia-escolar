@@ -12,6 +12,8 @@ import sigerdRoutes from "./routes/sigerd.routes.js";
 import usuarioRoutes from "./routes/usuario.routes.js";
 import gradoRoutes from "./routes/grado.routes.js";
 import estudianteRoutes from "./routes/estudiante.routes.js";
+import asistenciaRoutes from "./routes/asistencia.routes.js";
+import notificacionRoutes from "./routes/notificacion.routes.js";
 
 const app = express();
 
@@ -86,10 +88,10 @@ app.use(`${API_PREFIX}/sigerd`, sigerdRoutes);
 app.use(`${API_PREFIX}/usuarios`, usuarioRoutes);
 app.use(`${API_PREFIX}/grados`, gradoRoutes);
 app.use(`${API_PREFIX}/estudiantes`, estudianteRoutes);
-// app.use(`${API_PREFIX}/asistencia`, asistenciaRoutes);
+app.use(`${API_PREFIX}/asistencia`, asistenciaRoutes);
+app.use(`${API_PREFIX}/notificaciones`, notificacionRoutes);
 // app.use(`${API_PREFIX}/direccion`, direccionRoutes);
 // app.use(`${API_PREFIX}/minerd`, minerdRoutes);
-// app.use(`${API_PREFIX}/notificaciones`, notificacionRoutes);
 // app.use(`${API_PREFIX}/configuracion`, configuracionRoutes);
 // app.use(`${API_PREFIX}/reportes`, reporteRoutes);
 
