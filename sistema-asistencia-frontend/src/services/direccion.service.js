@@ -6,6 +6,8 @@ export const direccionService = {
     const response = await api.get(ENDPOINTS.DIRECTION_DASHBOARD, {
       params: { fecha },
     });
+
+    console.log("DIRECCION DASHBOARD RESPONSE:", response);
     return response.data;
   },
 
