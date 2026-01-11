@@ -19,6 +19,21 @@
   --color-info: #3b82f6;
 }
 
+/* Dark mode configuration */
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply transition-colors duration-300;
+  }
+}
+
 /* Custom scrollbar - global para toda la app (recomendado en @layer base) */
 @layer base {
   ::-webkit-scrollbar {
