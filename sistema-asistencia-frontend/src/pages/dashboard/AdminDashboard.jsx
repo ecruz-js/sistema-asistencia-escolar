@@ -1,27 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Users,
-  UserCheck,
-  UserX,
-  Clock,
   CheckCircle2,
   AlertCircle,
   TrendingUp,
   Calendar,
+  RefreshCw,
+  ArrowRight,
+  Users,
+  UserCheck,
+  UserX,
+  Clock,
+  ShieldCheck,
+  Bell,
+  CloudSync,
+  GraduationCap,
+  Send,
 } from 'lucide-react';
 import { direccionService } from '../../services/direccion.service';
 import { useUIStore } from '../../store/uiStore';
-import Card from '../../components/common/Card';
-import Badge from '../../components/common/Badge';
-import Button from '../../components/common/Button';
-import Spinner from '../../components/common/Spinner';
-import { formatDate, formatPercentage } from '../../utils/formatters';
+import { formatDate } from '../../utils/formatters';
 
 const AdminDashboard = () => {
-  const { currentDate, setCurrentDate } = useUIStore();
+  const { currentDate, setCurrentDate, darkMode } = useUIStore();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [autoSyncSigerd, setAutoSyncSigerd] = useState(true);
+  const [notificacionesActivas, setNotificacionesActivas] = useState(true);
 
-  // Obtener datos del dashboard
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['dashboard', currentDate],
     queryFn: () => direccionService.getDashboard(currentDate),
@@ -29,392 +34,324 @@ const AdminDashboard = () => {
 
   const dashboard = data?.data;
 
+  const totalEstudiantes = dashboard?.estudiantes?.total || 0;
+  const presentes = dashboard?.estudiantes?.presentes || 0;
+  const ausentes = dashboard?.estudiantes?.ausentes || 0;
+  const tardanzas = dashboard?.estudiantes?.tardanzas || 0;
+
+  const totalPersonal = useMemo(() => {
+    const personal = dashboard?.personal;
+    if (!personal) return 0;
+    return (
+      (personal?.docente_aula?.total || 0) +
+      (personal?.directivo?.total || 0) +
+      (personal?.administrativo?.total || 0)
+    );
+  }, [dashboard?.personal]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Spinner size="lg" />
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-slate-200 dark:border-slate-800 rounded-full" />
+          <div className="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin" />
+        </div>
+        <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">
+          Cargando dashboard...
+        </p>
       </div>
     );
   }
 
+  const tasaAsistencia = dashboard?.estudiantes?.total
+    ? ((dashboard?.estudiantes?.presentes || 0) / dashboard.estudiantes.total) * 100
+    : 0;
+
+  const asistenciaAngle = Math.min(Math.max(tasaAsistencia, 0), 100) * 3.6;
+
+  const progresoGrados = dashboard?.progreso_grados?.porcentaje || 0;
+  const gradosCompletados = dashboard?.progreso_grados?.completados || 0;
+  const gradosPendientes = dashboard?.progreso_grados?.pendientes || 0;
+
+  const minerdStatus = dashboard?.ya_enviado_minerd
+    ? { label: 'Enviado', hint: 'Sincronización completa', icon: CheckCircle2 }
+    : dashboard?.puede_enviar_minerd
+      ? { label: 'Listo', hint: 'Datos completos para enviar', icon: CheckCircle2 }
+      : { label: 'Pendiente', hint: `Faltan ${gradosPendientes} grados`, icon: Clock };
+
+  const pct = (value, total) => (total ? Math.round((value / total) * 100) : 0);
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 mt-1">
-            Vista general del sistema de asistencia
-          </p>
-        </div>
-
-        {/* Selector de Fecha */}
-        <div className="flex items-center gap-3">
-          <input
-            type="date"
-            value={currentDate}
-            onChange={(e) => setCurrentDate(e.target.value)}
-            className="input"
-          />
-          <Button onClick={() => refetch()} variant="secondary">
-            Actualizar
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards - Estudiantes */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Resumen de Estudiantes
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Total */}
-          <Card padding={true}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Estudiantes</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">
-                  {dashboard?.estudiantes.total || 0}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <Users className="w-6 h-6 text-blue-600" />
-              </div>
+    <div className="animate-in fade-in duration-500 h-full">
+      <div className="w-full h-full">
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-6 sm:px-8 pt-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-bold shadow-lg shadow-indigo-500/30">
+              S
             </div>
-          </Card>
-
-          {/* Presentes */}
-          <Card padding={true}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Presentes</p>
-                <p className="text-3xl font-bold text-green-600 mt-1">
-                  {dashboard?.estudiantes?.presentes || 0}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {formatPercentage(
-                    dashboard?.estudiantes?.presentes || 0,
-                    dashboard?.estudiantes?.total || 1
-                  )}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <UserCheck className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </Card>
-
-          {/* Ausentes */}
-          <Card padding={true}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Ausentes</p>
-                <p className="text-3xl font-bold text-red-600 mt-1">
-                  {dashboard?.estudiantes?.ausentes || 0}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {formatPercentage(
-                    dashboard?.estudiantes?.ausentes || 0,
-                    dashboard?.estudiantes?.total || 1
-                  )}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <UserX className="w-6 h-6 text-red-600" />
-              </div>
-            </div>
-          </Card>
-
-          {/* Tardanzas */}
-          <Card padding={true}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Tardanzas</p>
-                <p className="text-3xl font-bold text-yellow-600 mt-1">
-                  {dashboard?.estudiantes?.tardanzas || 0}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {formatPercentage(
-                    dashboard?.estudiantes?.tardanzas || 0,
-                    dashboard?.estudiantes?.total || 1
-                  )}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <Clock className="w-6 h-6 text-yellow-600" />
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      {/* Progreso de Grados */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Progreso */}
-        <Card
-          title="Progreso de Asistencia"
-          subtitle={`${dashboard?.progreso_grados?.completados || 0} de ${
-            dashboard?.progreso_grados?.total || 0
-          } grados completados`}
-        >
-          <div className="space-y-4">
-            {/* Barra de progreso */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  Completado
-                </span>
-                <span className="text-sm font-semibold text-primary-600">
-                  {dashboard?.progreso_grados?.porcentaje || 0}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  className="bg-primary-600 h-3 rounded-full transition-all duration-500"
-                  style={{
-                    width: `${dashboard?.progreso_grados?.porcentaje || 0}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 pt-4">
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <p className="text-2xl font-bold text-green-600">
-                  {dashboard?.progreso_grados?.completados || 0}
-                </p>
-                <p className="text-sm text-gray-600">Completados</p>
-              </div>
-              <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                <p className="text-2xl font-bold text-yellow-600">
-                  {dashboard?.progreso_grados?.pendientes || 0}
-                </p>
-                <p className="text-sm text-gray-600">Pendientes</p>
-              </div>
+              <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Sistema</p>
+              <p className="text-base font-bold text-slate-900 dark:text-white">Asistencia Escolar</p>
             </div>
           </div>
-        </Card>
 
-        {/* Estado MINERD */}
-        <Card
-          title="Estado de Envío MINERD"
-          subtitle="Verificación diaria"
-        >
-          <div className="space-y-4">
-            {dashboard?.ya_enviado_minerd ? (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-8 h-8 text-green-600" />
-                  <div>
-                    <p className="font-semibold text-green-900">
-                      Enviado Exitosamente
-                    </p>
-                    <p className="text-sm text-green-700">
-                      Los datos han sido enviados al MINERD
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : dashboard?.puede_enviar_minerd ? (
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="w-8 h-8 text-blue-600" />
-                  <div className="flex-1">
-                    <p className="font-semibold text-blue-900">
-                      Listo para Enviar
-                    </p>
-                    <p className="text-sm text-blue-700">
-                      Todos los grados completados
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="primary"
-                  className="w-full mt-4"
-                  onClick={() => (window.location.href = '/direccion/minerd')}
-                >
-                  Enviar al MINERD
-                </Button>
-              </div>
-            ) : (
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="w-8 h-8 text-yellow-600" />
-                  <div>
-                    <p className="font-semibold text-yellow-900">
-                      Pendiente
-                    </p>
-                    <p className="text-sm text-yellow-700">
-                      {dashboard?.progreso_grados?.pendientes || 0} grados sin
-                      completar asistencia
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </Card>
-      </div>
-
-      {/* Grados Pendientes */}
-      {dashboard?.grados_pendientes?.length > 0 && (
-        <Card
-          title="Grados Pendientes"
-          subtitle={`${dashboard?.grados_pendientes?.length} grados sin completar asistencia`}
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Grado
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Nivel
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Docentes
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Estado
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {dashboard?.grados_pendientes?.map((grado) => (
-                  <tr key={grado.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">
-                        {grado.nombre}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant="default">{grado.nivel}</Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-600">
-                        {grado.docentes?.length > 0 ? grado.docentes.map(d => d.nombre || d).join(', ') : 'Sin asignar'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant="warning">Pendiente</Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
-
-      {/* Grados Completados Recientes */}
-      {dashboard?.grados_completados_recientes?.length > 0 && (
-        <Card
-          title="Últimas Asistencias Completadas"
-          subtitle="Grados que completaron asistencia hoy"
-        >
-          <div className="space-y-3">
-            {dashboard?.grados_completados_recientes?.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {item.grado?.nombre}
-                    </p>
-                    {item.docente?.nombre && (
-                      <p className="text-sm text-gray-500">
-                        Por: {item.docente?.nombre}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">
-                    {item.hora_completada}
-                  </p>
-                  <Badge variant="success" size="sm">
-                    Completado
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* Resumen Personal */}
-      <Card title="Resumen de Personal" subtitle="Asistencia del personal">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Docentes de Aula */}
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-2">Docentes de Aula</p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold text-gray-900">
-                {dashboard?.personal?.docentes_aula?.presentes || 0}
-              </p>
-              <p className="text-sm text-gray-500">
-                / {dashboard?.personal?.docentes_aula?.total || 0}
-              </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm">
+              <Calendar className="w-4 h-4" />
+              <span className="font-semibold">{formatDate(new Date(), 'EEEE, d MMMM yyyy')}</span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {formatPercentage(
-                dashboard?.personal?.docentes_aula?.presentes || 0,
-                dashboard?.personal?.docentes_aula?.total || 1
-              )}{' '}
-              presentes
-            </p>
-          </div>
-
-          {/* Personal Directivo */}
-          <div className="p-4 bg-purple-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-2">Personal Directivo</p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold text-gray-900">
-                {dashboard?.personal?.directivo?.presentes || 0}
-              </p>
-              <p className="text-sm text-gray-500">
-                / {dashboard?.personal?.directivo?.total || 0}
-              </p>
+            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Fecha</span>
+              <input
+                type="date"
+                value={currentDate}
+                onChange={(e) => setCurrentDate(e.target.value)}
+                className="bg-transparent border-none focus:outline-none text-slate-800 dark:text-slate-100 font-semibold text-sm"
+              />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {formatPercentage(
-                dashboard?.personal?.directivo?.presentes || 0,
-                dashboard?.personal?.directivo?.total || 1
-              )}{' '}
-              presentes
-            </p>
-          </div>
-
-          {/* Personal Administrativo */}
-          <div className="p-4 bg-green-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-2">
-              Personal Administrativo
-            </p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold text-gray-900">
-                {dashboard?.personal?.administrativo?.presentes || 0}
-              </p>
-              <p className="text-sm text-gray-500">
-                / {dashboard?.personal?.administrativo?.total || 0}
-              </p>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {formatPercentage(
-                dashboard?.personal?.administrativo?.presentes || 0,
-                dashboard?.personal?.administrativo?.total || 1
-              )}{' '}
-              presentes
-            </p>
+            <button
+              onClick={handleRefresh}
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 text-white px-4 py-2 font-semibold text-sm shadow-md hover:bg-indigo-600 hover:shadow-lg transition-all"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Actualizar
+            </button>
           </div>
         </div>
-      </Card>
+
+        {/* Contenido Principal */}
+        <div id='main-content' className="px-6 sm:px-8 pb-8 pt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+
+            {/* Detalles del día */}
+            <div className="lg:col-span-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-6">
+              <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Detalles del día</p>
+              <div className="mt-3">
+                <p className="text-4xl font-bold text-slate-900 dark:text-white">{presentes}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mt-1">
+                  estudiantes presentes de {totalEstudiantes}
+                </p>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ausentes</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{ausentes}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{pct(ausentes, totalEstudiantes)}%</p>
+                </div>
+                <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tardanzas</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{tardanzas}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{pct(tardanzas, totalEstudiantes)}%</p>
+                </div>
+              </div>
+
+              {/* Gauge de asistencia simplificado */}
+              <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Asistencia</span>
+                  <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{tasaAsistencia.toFixed(1)}%</span>
+                </div>
+                <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(Math.max(tasaAsistencia, 0), 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Personal (Centro) */}
+            <div className="lg:col-span-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Personal</p>
+                <Users className="w-5 h-5 text-slate-400" />
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  { label: 'Docentes', presentes: dashboard?.personal?.docente_aula?.presentes || 0, total: dashboard?.personal?.docente_aula?.total || 0, icon: UserCheck },
+                  { label: 'Directivos', presentes: dashboard?.personal?.directivo?.presentes || 0, total: dashboard?.personal?.directivo?.total || 0, icon: ShieldCheck },
+                  { label: 'Administrativos', presentes: dashboard?.personal?.administrativo?.presentes || 0, total: dashboard?.personal?.administrativo?.total || 0, icon: Users }
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400">
+                        <item.icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">{item.label}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {item.presentes} de {item.total}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-slate-900 dark:text-white">{pct(item.presentes, item.total)}%</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Total Personal</span>
+                  <span className="text-2xl font-bold text-slate-900 dark:text-white">{totalPersonal}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Progreso y MINERD */}
+            <div className="lg:col-span-4 space-y-4">
+              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Progreso Grados</p>
+                  <GraduationCap className="w-5 h-5 text-slate-400" />
+                </div>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">{progresoGrados}%</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mt-1">
+                  {gradosCompletados} completados
+                </p>
+                <div className="mt-4 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(Math.max(progresoGrados, 0), 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Estado MINERD</p>
+                  <Send className="w-5 h-5 text-slate-400" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white">{minerdStatus.label}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mt-1">{minerdStatus.hint}</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <minerdStatus.icon className="w-6 h-6" />
+                  </div>
+                </div>
+                {dashboard?.puede_enviar_minerd && !dashboard?.ya_enviado_minerd && (
+                  <button
+                    onClick={() => (window.location.href = '/direccion/minerd')}
+                    className="mt-4 w-full rounded-xl bg-indigo-500 text-white py-2.5 text-sm font-bold hover:bg-indigo-600 transition-colors shadow-md"
+                  >
+                    Enviar ahora
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Actividad Reciente */}
+            <div className="lg:col-span-8">
+              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Actividad Reciente</p>
+                  <button
+                    onClick={() => (window.location.href = '/direccion/grados')}
+                    className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+                  >
+                    Ver todo →
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {dashboard?.grados_completados_recientes?.length > 0 ? (
+                    dashboard.grados_completados_recientes.slice(0, 5).map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-10 w-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+                            <CheckCircle2 className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.grado?.nombre || 'Grado'}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{item.docente?.nombre || 'Docente'}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-300">{item.hora_completada || '--:--'}</p>
+                          <ArrowRight className="w-4 h-4 text-slate-400" />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center">
+                      <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                      <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Sin actividad registrada hoy</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Configuraciones */}
+            <div className="lg:col-span-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                {[
+                  {
+                    title: 'Sincronización SIGERD',
+                    subtitle: 'Automática',
+                    icon: CloudSync,
+                    value: autoSyncSigerd,
+                    onChange: setAutoSyncSigerd,
+                  },
+                  {
+                    title: 'Notificaciones',
+                    subtitle: 'Recordatorios',
+                    icon: Bell,
+                    value: notificacionesActivas,
+                    onChange: setNotificacionesActivas,
+                  },
+                ].map((t) => (
+                  <div key={t.title} className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                          <t.icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">{t.title}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t.subtitle}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => t.onChange(!t.value)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${t.value ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700'
+                          }`}
+                        aria-pressed={t.value}
+                      >
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${t.value ? 'translate-x-5' : 'translate-x-1'
+                            }`}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      <div className={`h-2 w-2 rounded-full ${t.value ? 'bg-indigo-500' : 'bg-slate-400'}`} />
+                      <span>{t.value ? 'Activo' : 'Desactivado'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

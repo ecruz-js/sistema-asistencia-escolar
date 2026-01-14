@@ -19,6 +19,7 @@ import Spinner from "../../components/common/Spinner";
 import { formatDate } from "../../utils/formatters";
 import { ESTADOS_ASISTENCIA } from "../../utils/constants";
 import toast from "react-hot-toast";
+import { asistenciaService } from "../../services/asistencia.service";
 
 const TomarAsistencia = () => {
   const { gradoId } = useParams();
@@ -31,7 +32,6 @@ const TomarAsistencia = () => {
   const {
     grados,
     loadingGrados,
-    getListaEstudiantes,
     tomarAsistencia,
     tomarAsistenciaLoading,
     dentroHorarioAsistencia,
@@ -48,12 +48,18 @@ const TomarAsistencia = () => {
     refetch,
   } = useQuery({
     queryKey: ["lista-estudiantes", selectedGradoId, currentDate],
-    queryFn: () => getListaEstudiantes(selectedGradoId).queryFn(),
+    queryFn: () =>
+      asistenciaService.getListaEstudiantes(selectedGradoId, currentDate),
     enabled: !!selectedGradoId,
   });
 
-  const estudiantes = estudiantesData?.data?.estudiantes || [];
-  const asistenciasExistentes = estudiantesData?.data?.asistencias_existentes;
+  // Acceder a los datos: el backend puede devolver directamente o envuelto en data
+  // Intentamos ambos formatos para compatibilidad
+  const estudiantes =
+    estudiantesData?.data?.estudiantes || estudiantesData?.estudiantes || [];
+  const asistenciasExistentes =
+    estudiantesData?.data?.asistencias_existentes ||
+    estudiantesData?.asistencias_existentes;
 
   // Inicializar asistencias con datos existentes
   useEffect(() => {

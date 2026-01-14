@@ -26,9 +26,8 @@ const Input = forwardRef(
 
           <input
             ref={ref}
-            className={`input ${Icon ? "pl-10" : ""} ${
-              error ? "border-red-500 focus:ring-red-500" : ""
-            } ${className}`}
+            className={`input ${Icon ? "pl-10" : ""} ${error ? "border-red-500 focus:ring-red-500" : ""
+              } ${className}`}
             {...props}
           />
         </div>

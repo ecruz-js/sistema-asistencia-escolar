@@ -26,53 +26,47 @@ const obtenerDocentesPendientes = async (fecha) => {
     "año_escolar_actual"
   );
 
-  // Obtener todas las asignaciones activas
-  const asignaciones = await db.AsignacionDocenteGrado.findAll({
+  // Obtener todos los docentes activos
+  const docentes = await db.Usuario.findAll({
     where: {
-      año_escolar: añoEscolar,
+      rol: "docente_aula",
       activo: true,
     },
-    include: [
-      {
-        model: db.Usuario,
-        as: "docente",
-        where: { activo: true },
-        attributes: ["id", "nombre", "apellido", "email"],
-      },
-      {
-        model: db.Grado,
-        as: "grado",
-        where: { activo: true },
-        attributes: ["id", "nombre", "nivel", "seccion"],
-      },
-    ],
+    attributes: ["id", "nombre", "apellido", "email"],
+  });
+
+  // Obtener todos los grados activos
+  const grados = await db.Grado.findAll({
+    where: {
+      activo: true,
+      año_escolar: añoEscolar,
+    },
+    attributes: ["id", "nombre", "nivel", "seccion"],
   });
 
   // Agrupar por docente
   const docentesMap = new Map();
 
-  for (const asignacion of asignaciones) {
-    const docenteId = asignacion.docente.id;
-
-    if (!docentesMap.has(docenteId)) {
-      docentesMap.set(docenteId, {
-        docente: asignacion.docente,
-        grados: [],
-      });
-    }
-
-    // Verificar si el grado ya completó asistencia
-    const registro = await db.RegistroAsistenciaGrado.findOne({
-      where: {
-        grado_id: asignacion.grado.id,
-        fecha,
-        completada: true,
-      },
+  for (const docente of docentes) {
+    docentesMap.set(docente.id, {
+      docente,
+      grados: [],
     });
 
-    // Si no ha completado, agregar a la lista de pendientes
-    if (!registro) {
-      docentesMap.get(docenteId).grados.push(asignacion.grado);
+    // Verificar qué grados tienen asistencia pendiente
+    for (const grado of grados) {
+      const registro = await db.RegistroAsistenciaGrado.findOne({
+        where: {
+          grado_id: grado.id,
+          fecha,
+          completada: true,
+        },
+      });
+
+      // Si no ha completado, agregar a la lista de pendientes
+      if (!registro) {
+        docentesMap.get(docente.id).grados.push(grado);
+      }
     }
   }
 

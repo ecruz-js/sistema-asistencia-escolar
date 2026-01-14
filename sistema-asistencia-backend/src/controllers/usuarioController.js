@@ -68,14 +68,6 @@ export const obtenerPorId = async (req, res, next) => {
 
     const usuario = await db.Usuario.findByPk(id, {
       attributes: { exclude: ["password_hash"] },
-      include: [
-        {
-          model: db.Grado,
-          as: "gradosAsignados",
-          through: { attributes: [] },
-          attributes: ["id", "nombre", "nivel", "seccion"],
-        },
-      ],
     });
 
     if (!usuario) {
@@ -88,44 +80,174 @@ export const obtenerPorId = async (req, res, next) => {
   }
 };
 
-// Crear usuario
+// Crear usuario (único o múltiple)
 export const crear = async (req, res, next) => {
   try {
-    const { nombre, apellido, email, password, rol, categoria_personal } =
-      req.body;
+    // Detectar si es creación simple o múltiple
+    const esCreacionMultiple = Array.isArray(req.body.usuarios);
 
-    // Verificar si el email ya existe
-    const usuarioExistente = await db.Usuario.findOne({ where: { email } });
+    if (esCreacionMultiple) {
+      // Creación múltiple
+      const { usuarios } = req.body;
 
-    if (usuarioExistente) {
-      return errorResponse(res, "El email ya está registrado", 409);
+      // Verificar emails duplicados en el array
+      const emails = usuarios.map((u) => u.email);
+      const emailsDuplicados = emails.filter(
+        (email, index) => emails.indexOf(email) !== index
+      );
+
+      if (emailsDuplicados.length > 0) {
+        return errorResponse(
+          res,
+          `Emails duplicados en el array: ${emailsDuplicados.join(", ")}`,
+          400
+        );
+      }
+
+      // Verificar cédulas duplicadas en el array
+      const cedulas = usuarios.map((u) => u.cedula);
+      const cedulasDuplicadas = cedulas.filter(
+        (cedula, index) => cedulas.indexOf(cedula) !== index
+      );
+
+      if (cedulasDuplicadas.length > 0) {
+        return errorResponse(
+          res,
+          `Cédulas duplicadas en el array: ${cedulasDuplicadas.join(", ")}`,
+          400
+        );
+      }
+
+      // Verificar si algún email ya existe en la BD
+      const usuariosExistentes = await db.Usuario.findAll({
+        where: {
+          [Op.or]: [{ email: { [Op.in]: emails } }, { cedula: { [Op.in]: cedulas } }],
+        },
+      });
+
+      if (usuariosExistentes.length > 0) {
+        const emailsExistentes = usuariosExistentes.map((u) => u.email);
+        const cedulasExistentes = usuariosExistentes.map((u) => u.cedula);
+        return errorResponse(
+          res,
+          `Los siguientes datos ya están registrados - Emails: ${emailsExistentes.join(
+            ", "
+          )} - Cédulas: ${cedulasExistentes.join(", ")}`,
+          409
+        );
+      }
+
+      // Preparar usuarios para inserción
+      const usuariosParaCrear = usuarios.map((u) => ({
+        cedula: u.cedula,
+        primer_apellido: u.primer_apellido,
+        segundo_apellido: u.segundo_apellido || null,
+        nombres: u.nombres,
+        fecha_nacimiento: u.fecha_nacimiento || null,
+        puesto: u.puesto,
+        condicion_laboral: u.condicion_laboral,
+        categoria_personal: u.categoria_personal || null,
+        email: u.email,
+        password_hash: u.password, // El hook beforeCreate lo hasheará
+        rol: u.rol,
+        foto_url: u.foto_url || null,
+        activo: true,
+      }));
+
+      // Crear usuarios
+      const usuariosCreados = await db.Usuario.bulkCreate(usuariosParaCrear, {
+        validate: true,
+        individualHooks: true, // Para que se ejecute el hook beforeCreate de cada uno
+      });
+
+      // Log de auditoría para cada usuario creado
+      for (const usuario of usuariosCreados) {
+        await db.LogAuditoria.registrar({
+          usuarioId: req.usuario.id,
+          accion: "crear_usuario_masivo",
+          tablaAfectada: "usuarios",
+          registroId: usuario.id,
+          datosNuevos: usuario.toJSON(),
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+        });
+      }
+
+      logger.info(
+        `Usuario ${req.usuario.email} creó ${usuariosCreados.length} usuarios`
+      );
+
+      return successResponse(
+        res,
+        usuariosCreados,
+        `${usuariosCreados.length} usuarios creados exitosamente`,
+        201
+      );
+    } else {
+      // Creación simple (un solo usuario)
+      const {
+        cedula,
+        primer_apellido,
+        segundo_apellido,
+        nombres,
+        fecha_nacimiento,
+        puesto,
+        condicion_laboral,
+        categoria_personal,
+        email,
+        password,
+        rol,
+        foto_url,
+      } = req.body;
+
+      // Verificar si el email o cédula ya existe
+      const usuarioExistente = await db.Usuario.findOne({
+        where: {
+          [Op.or]: [{ email }, { cedula }],
+        },
+      });
+
+      if (usuarioExistente) {
+        if (usuarioExistente.email === email) {
+          return errorResponse(res, "El email ya está registrado", 409);
+        }
+        if (usuarioExistente.cedula === cedula) {
+          return errorResponse(res, "La cédula ya está registrada", 409);
+        }
+      }
+
+      // Crear usuario
+      const usuario = await db.Usuario.create({
+        cedula,
+        primer_apellido,
+        segundo_apellido,
+        nombres,
+        fecha_nacimiento,
+        puesto,
+        condicion_laboral,
+        categoria_personal,
+        email,
+        password_hash: password, // El hook beforeCreate lo hasheará
+        rol,
+        foto_url,
+        activo: true,
+      });
+
+      // Log de auditoría
+      await db.LogAuditoria.registrar({
+        usuarioId: req.usuario.id,
+        accion: "crear_usuario",
+        tablaAfectada: "usuarios",
+        registroId: usuario.id,
+        datosNuevos: usuario.toJSON(),
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent"),
+      });
+
+      logger.info(`Usuario ${req.usuario.email} creó usuario ${usuario.email}`);
+
+      return successResponse(res, usuario, "Usuario creado exitosamente", 201);
     }
-
-    // Crear usuario
-    const usuario = await db.Usuario.create({
-      nombre,
-      apellido,
-      email,
-      password_hash: password, // El hook beforeCreate lo hasheará
-      rol,
-      categoria_personal,
-      activo: true,
-    });
-
-    // Log de auditoría
-    await db.LogAuditoria.registrar({
-      usuarioId: req.usuario.id,
-      accion: "crear_usuario",
-      tablaAfectada: "usuarios",
-      registroId: usuario.id,
-      datosNuevos: usuario.toJSON(),
-      ipAddress: req.ip,
-      userAgent: req.get("user-agent"),
-    });
-
-    logger.info(`Usuario ${req.usuario.email} creó usuario ${usuario.email}`);
-
-    return successResponse(res, usuario, "Usuario creado exitosamente", 201);
   } catch (error) {
     next(error);
   }
@@ -271,70 +393,6 @@ export const reactivar = async (req, res, next) => {
   }
 };
 
-// Asignar grados a un docente
-export const asignarGrados = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { grados } = req.body; // Array de IDs de grados
-
-    const usuario = await db.Usuario.findByPk(id);
-
-    if (!usuario) {
-      return errorResponse(res, "Usuario no encontrado", 404);
-    }
-
-    // Verificar que sea docente
-    if (usuario.rol !== "docente_aula" && usuario.rol !== "admin") {
-      return errorResponse(
-        res,
-        "Solo se pueden asignar grados a docentes",
-        400
-      );
-    }
-
-    // Obtener año escolar actual
-    const añoEscolar = await db.ConfiguracionSistema.getValor(
-      "año_escolar_actual"
-    );
-
-    // Eliminar asignaciones anteriores del año actual
-    await db.AsignacionDocenteGrado.destroy({
-      where: {
-        docente_id: id,
-        año_escolar: añoEscolar,
-      },
-    });
-
-    // Crear nuevas asignaciones
-    const asignaciones = grados.map((gradoId) => ({
-      docente_id: id,
-      grado_id: gradoId,
-      año_escolar: añoEscolar,
-      activo: true,
-    }));
-
-    await db.AsignacionDocenteGrado.bulkCreate(asignaciones);
-
-    // Log de auditoría
-    await db.LogAuditoria.registrar({
-      usuarioId: req.usuario.id,
-      accion: "asignar_grados",
-      tablaAfectada: "asignaciones_docente_grado",
-      datosNuevos: { docente_id: id, grados },
-      ipAddress: req.ip,
-      userAgent: req.get("user-agent"),
-    });
-
-    logger.info(
-      `Usuario ${req.usuario.email} asignó ${grados.length} grados al docente ${usuario.email}`
-    );
-
-    return successResponse(res, asignaciones, "Grados asignados exitosamente");
-  } catch (error) {
-    next(error);
-  }
-};
-
 export default {
   listar,
   obtenerPorId,
@@ -342,5 +400,4 @@ export default {
   actualizar,
   desactivar,
   reactivar,
-  asignarGrados,
 };

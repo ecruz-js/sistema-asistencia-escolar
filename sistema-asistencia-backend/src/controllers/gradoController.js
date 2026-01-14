@@ -97,15 +97,15 @@ export const obtenerPorId = async (req, res, next) => {
           required: false,
           attributes: ['id', 'nombre', 'nombre2', 'apellido', 'apellido2', 'fecha_nacimiento']
         },
-        {
-          model: db.Usuario,
-          as: 'docentes',
-          through: { 
-            attributes: [],
-            where: { activo: true }
-          },
-          attributes: ['id', 'nombre', 'apellido', 'email', 'rol']
-        }
+        // {
+        //   model: db.Usuario,
+        //   as: 'docentes',
+        //   through: { 
+        //     attributes: [],
+        //     where: { activo: true }
+        //   },
+        //   attributes: ['id', 'nombre', 'apellido', 'email', 'rol']
+        // }
       ]
     });
 

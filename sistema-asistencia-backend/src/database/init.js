@@ -49,18 +49,25 @@ const inicializarBaseDatos = async () => {
       // Crear usuario administrador por defecto
       // El hook beforeCreate del modelo se encarga de hashear la contraseña
       const admin = await db.Usuario.create({
-        nombre: "Administrador",
-        apellido: "Sistema",
-        email: "admin@sistema.edu.do",
-        password_hash: "Admin123!",
-        rol: ROLES.ADMIN,
-        categoria_personal: CATEGORIAS_PERSONAL.DIRECTIVO,
+        nombres: process.env.ADMIN_NAME || "Administrador",
+        primer_apellido: process.env.ADMIN_FIRST_LASTNAME || "Sistema",
+        segundo_apellido: process.env.ADMIN_SECOND_LASTNAME || "Sistema",
+        cedula: process.env.ADMIN_ID || "00000000000",
+        fecha_nacimiento: process.env.ADMIN_BIRTHDATE || null,
+        email: process.env.ADMIN_EMAIL || "admin@sistema.edu.do",
+        password_hash: process.env.ADMIN_PASSWORD || "AdminPass123!",
+        puesto: process.env.ADMIN_POSITION || "digitador",
+        condicion_laboral: process.env.ADMIN_LABORAL_STATUS || "fijo",
+        categoria_personal:
+          process.env.ADMIN_STAFF_TYPE || CATEGORIAS_PERSONAL.DIRECTIVO,
+        rol: process.env.ADMIN_ROLE || ROLES.ADMIN,
         activo: true,
+        foto_url: process.env.ADMIN_PROFILE_PIC_URL || null,
       });
 
       console.log("✅ Usuario administrador creado");
       console.log("   Email:", admin.email);
-      console.log("   Password: Admin123!");
+      console.log("   Password:", admin.password_hash);
 
       // Insertar servicios SIGERD
       const servicios = await db.SigerdServicio.bulkCreate([

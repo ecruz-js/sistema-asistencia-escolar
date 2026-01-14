@@ -1,4 +1,26 @@
-import { Menu, Bell, User, LogOut, Key, School, ChevronDown, Search, X, TrendingUp, Clock, Home, ChevronRight } from "lucide-react";
+import {
+  Menu,
+  Bell,
+  User,
+  LogOut,
+  Settings,
+  Search,
+  X,
+  TrendingUp,
+  Clock,
+  Home,
+  ChevronRight,
+  FileText,
+  Users,
+  Calendar,
+  ChevronLeft,
+  Zap,
+  HelpCircle,
+  ClipboardCheck,
+  GraduationCap,
+  Moon,
+  Sun,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useUIStore } from "../../store/uiStore";
 import { useAuth } from "../../hooks/useAuth";
@@ -7,7 +29,7 @@ import { formatRelativeTime } from "../../utils/formatters";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
-  const { toggleSidebar, darkMode } = useUIStore();
+  const { toggleSidebar, darkMode, toggleDarkMode } = useUIStore();
   const { user, logout } = useAuth();
   const { notifications, unreadCount, markAsRead } = useNotifications();
   const location = useLocation();
@@ -28,291 +50,404 @@ const Navbar = () => {
       if (
         notificationsRef.current &&
         !notificationsRef.current.contains(event.target)
-      ) {
+      )
         setShowNotifications(false);
-      }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target))
         setShowUserMenu(false);
-      }
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
+      if (searchRef.current && !searchRef.current.contains(event.target))
         setShowSearch(false);
-      }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Keyboard shortcut for search (Cmd+K or Ctrl+K)
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setShowSearch(true);
       }
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setShowSearch(false);
         setShowNotifications(false);
         setShowUserMenu(false);
       }
     };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Generar breadcrumbs basados en la ruta
+  // Breadcrumbs logic
   const generateBreadcrumbs = () => {
-    const pathnames = location.pathname.split('/').filter(x => x);
-    const breadcrumbs = [{ name: 'Inicio', path: '/dashboard', icon: Home }];
-
-    let currentPath = '';
+    const pathnames = location.pathname.split("/").filter((x) => x);
+    const breadcrumbs = [{ name: "Inicio", path: "/dashboard", icon: Home }];
+    let currentPath = "";
     pathnames.forEach((path, index) => {
       currentPath += `/${path}`;
-      const name = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
+      const name =
+        path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
       breadcrumbs.push({ name, path: currentPath });
     });
-
     return breadcrumbs;
   };
-
   const breadcrumbs = generateBreadcrumbs();
+
+  // Quick actions for search
+  const quickActions = [
+    {
+      icon: ClipboardCheck,
+      label: "Tomar Asistencia",
+      path: "/asistencia",
+      category: "Acciones",
+    },
+    {
+      icon: Users,
+      label: "Estudiantes",
+      path: "/estudiantes",
+      category: "Gestión",
+    },
+    {
+      icon: GraduationCap,
+      label: "Grados",
+      path: "/grados",
+      category: "Gestión",
+    },
+    {
+      icon: FileText,
+      label: "Reportes",
+      path: "/reportes",
+      category: "Reportes",
+    },
+    {
+      icon: Settings,
+      label: "Configuración",
+      path: "/configuracion",
+      category: "Sistema",
+    },
+  ];
+
+  const filteredActions = quickActions.filter((action) =>
+    action.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-30 transition-all duration-300 border-b border-slate-200/50 dark:border-slate-700/50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl">
-        <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Left side - Trigger & Branding */}
-            <div className="flex items-center gap-4">
+      {/* --- NAVBAR HEADER --- */}
+      <nav className="sticky top-0 z-30 transition-all duration-300 border-b border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-950/90 backdrop-blur-xl">
+        <div className="px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            {/* Izquierda: Toggle & Breadcrumbs */}
+            <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
               <button
                 onClick={toggleSidebar}
-                className="p-2.5 transition-all duration-200 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                aria-label="Toggle menu"
+                className="p-1.5 sm:p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors flex-shrink-0"
               >
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5 h-5" />
               </button>
 
               {/* Mobile Brand */}
-              <div className="flex items-center gap-3 lg:hidden">
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg shadow-sm bg-gradient-to-tr from-primary-600 to-primary-500 text-white">
-                  <School className="w-5 h-5" />
+              <div className="flex items-center gap-2 lg:hidden flex-shrink-0">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-primary-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm">
+                  S
                 </div>
-                <span className="text-lg font-bold tracking-tight text-slate-800 dark:text-white">S.A.E.</span>
               </div>
 
-              {/* Desktop Breadcrumbs */}
-              <div className="hidden lg:flex items-center gap-2">
+              {/* Breadcrumbs Desktop */}
+              <div className="hidden lg:flex items-center gap-2 text-sm">
                 {breadcrumbs.map((crumb, index) => (
                   <div key={crumb.path} className="flex items-center gap-2">
-                    {index > 0 && <ChevronRight className="w-4 h-4 text-slate-400" />}
+                    {index > 0 && (
+                      <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600" />
+                    )}
                     <button
                       onClick={() => navigate(crumb.path)}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${
                         index === breadcrumbs.length - 1
-                          ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          ? "font-semibold text-slate-900 dark:text-white"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
                       }`}
                     >
-                      {crumb.icon && <crumb.icon className="w-4 h-4" />}
-                      <span>{crumb.name}</span>
+                      {index === 0 && <crumb.icon className="w-4 h-4" />}
+                      {crumb.name}
                     </button>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Right side - Actions */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Search Button */}
+            {/* Derecha: Acciones */}
+            <div className="flex items-center justify-center gap-1 sm:gap-2 flex-shrink-0">
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={toggleDarkMode}
+                className="w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all duration-200 mb-0 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+              >
+                <div className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-700">
+                  {darkMode ? (
+                    <Sun className="w-4 h-4 text-amber-500" />
+                  ) : (
+                    <Moon className="w-4 h-4 text-indigo-600" />
+                  )}
+                </div>
+              </button>
+
+              {/* Search Trigger */}
               <button
                 onClick={() => setShowSearch(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-transparent hover:border-slate-300 dark:hover:border-slate-600 text-xs font-medium shadow-sm"
               >
-                <Search className="w-5 h-5" />
-                <span className="hidden md:inline">Buscar</span>
-                <kbd className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded">
+                <Search className="w-4 h-4" />
+                <span className="opacity-70">Buscar...</span>
+                <kbd className="ml-2 px-1.5 py-0.5 rounded bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 shadow-xs font-mono text-[10px] opacity-60">
                   ⌘K
                 </kbd>
               </button>
-
-              {/* Notifications */}
+              {/* Mobile Search Icon */}
               <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className={`relative p-2.5 rounded-xl transition-all duration-200 ${
-                  showNotifications
-                    ? "bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
-                    : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200"
-                }`}
-                aria-label="Notificaciones"
+                onClick={() => setShowSearch(true)}
+                className="md:hidden p-1.5 sm:p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 flex w-2.5 h-2.5">
-                    <span className="absolute inline-flex w-full h-full rounded-full bg-rose-400 opacity-75 animate-ping"></span>
-                    <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white dark:border-slate-900"></span>
-                  </span>
-                )}
+                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
 
-              {/* User Menu Button */}
+              {/* Notifications */}
+              <div className="relative" ref={notificationsRef}>
+                <button
+                  onClick={() => {
+                    setShowNotifications(!showNotifications);
+                    setShowUserMenu(false);
+                  }}
+                  className={`p-1.5 sm:p-2 rounded-xl transition-all duration-200 relative ${
+                    showNotifications
+                      ? "bg-indigo-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-rose-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-950">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* User Menu */}
               <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-3 p-1.5 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-800 group outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                onClick={() => {
+                  setShowUserMenu(!showUserMenu);
+                  setShowNotifications(false);
+                }}
+                className={`flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl transition-all duration-200 ${
+                  showUserMenu
+                    ? "bg-indigo-100 dark:bg-slate-800"
+                    : "hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
               >
-                <div className="relative overflow-hidden w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-primary-200 to-indigo-100 dark:from-primary-800 dark:to-indigo-900 flex items-center justify-center ring-2 ring-white dark:ring-slate-800 shadow-sm group-hover:shadow-md transition-shadow">
-                  {user?.avatar_url ? (
-                    <img src={user.avatar_url} alt={user.nombre} className="object-cover w-full h-full" />
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex items-center justify-center ring-2 ring-slate-200 dark:ring-slate-700">
+                  {user?.foto_ur ? (
+                    <img
+                      src={user.foto_url}
+                      alt={user.nombre}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <span className="text-sm font-bold text-primary-700 dark:text-primary-300">
-                      {user?.nombre?.charAt(0)}{user?.apellido?.charAt(0)}
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      {user?.nombres?.charAt(0)}
                     </span>
                   )}
                 </div>
-                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 hidden sm:block ${showUserMenu ? 'rotate-180' : ''}`} />
+                <span className="sm:block text-sm font-semibold text-slate-800 dark:text-slate-200">
+                  {user?.nombres}
+                </span>
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Search Modal - Pantalla completa */}
+      {/* --- SEARCH MODAL --- */}
       <div
         ref={searchRef}
-        className={`fixed inset-0 z-50 transition-all duration-300 ${
+        className={`fixed inset-0 z-50 flex items-start justify-center transition-all duration-300 ${
           showSearch ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
-        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-lg" onClick={() => setShowSearch(false)} />
-        <div className="relative h-full flex items-start justify-center pt-20 sm:pt-32 px-4">
-          <div className={`w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl ring-1 ring-slate-900/10 dark:ring-white/10 overflow-hidden transform transition-all duration-300 ${
-            showSearch ? "scale-100 translate-y-0" : "scale-95 translate-y-4"
-          }`}>
-            {/* Search Header */}
-            <div className="flex items-center gap-4 px-6 py-5 border-b border-slate-200 dark:border-slate-700">
-              <Search className="w-6 h-6 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Buscar estudiantes, grados, reportes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent text-lg font-medium text-slate-900 dark:text-white placeholder-slate-400 outline-none"
-                autoFocus
-              />
-              <button
-                onClick={() => setShowSearch(false)}
-                className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+        <div
+          className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-md transition-opacity"
+          onClick={() => setShowSearch(false)}
+        />
+        <div
+          className={`relative w-full max-w-2xl mx-4 mt-16 sm:mt-24 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all duration-300 ${
+            showSearch ? "scale-100 translate-y-0" : "scale-95 -translate-y-4"
+          }`}
+        >
+          {/* Search Input */}
+          <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-slate-800">
+            <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar páginas, acciones..."
+              className="flex-1 bg-transparent outline-none text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+              autoFocus
+            />
+            <button
+              onClick={() => setShowSearch(false)}
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
 
-            {/* Search Results */}
-            <div className="max-h-96 overflow-y-auto p-4 space-y-2">
-              {searchQuery === "" ? (
-                <div className="py-12 text-center">
-                  <Search className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-700 mb-4" />
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Comienza a escribir para buscar...</p>
-                  <div className="mt-6 grid grid-cols-2 gap-3 max-w-md mx-auto">
-                    <button className="p-3 text-left rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                      <TrendingUp className="w-5 h-5 text-primary-500 mb-2" />
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Asistencias</p>
-                    </button>
-                    <button className="p-3 text-left rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                      <Clock className="w-5 h-5 text-indigo-500 mb-2" />
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Reportes</p>
-                    </button>
-                  </div>
+          {/* Quick Actions Results */}
+          <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+            {searchQuery === "" ? (
+              <div className="p-4 sm:p-6 text-center">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <Search className="w-5 h-5 sm:w-7 sm:h-7 text-slate-400 dark:text-slate-500" />
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Buscando "{searchQuery}"...
-                  </p>
-                </div>
-              )}
-            </div>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                  Escribe para buscar páginas y acciones
+                </p>
+              </div>
+            ) : filteredActions.length === 0 ? (
+              <div className="p-4 sm:p-6 text-center">
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                  No se encontraron resultados
+                </p>
+              </div>
+            ) : (
+              <div className="p-2">
+                {filteredActions.map((action, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      navigate(action.path);
+                      setShowSearch(false);
+                      setSearchQuery("");
+                    }}
+                    className="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group text-left"
+                  >
+                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <action.icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                        {action.label}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {action.category}
+                      </p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer Tips */}
+          <div className="px-4 sm:px-6 py-2 sm:py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1">
+              <kbd className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-1">
+                ESC
+              </kbd>{" "}
+              Cerrar
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-1">
+                ↵
+              </kbd>{" "}
+              Seleccionar
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Notifications Panel - Pantalla completa */}
+      {/* --- NOTIFICATIONS PANEL --- */}
       <div
         ref={notificationsRef}
-        className={`fixed inset-0 z-50 transition-all duration-500 ${
+        className={`fixed inset-0 z-50 transition-all duration-300 ${
           showNotifications ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
-        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowNotifications(false)} />
-        <div className={`absolute right-0 top-0 h-full w-full sm:w-[450px] bg-white dark:bg-slate-900 shadow-2xl transform transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-          showNotifications ? "translate-x-0" : "translate-x-full"
-        }`}>
+        <div
+          className="absolute inset-0 bg-slate-900/20 dark:bg-slate-950/40 backdrop-blur-sm transition-opacity"
+          onClick={() => setShowNotifications(false)}
+        />
+        <div
+          className={`absolute right-0 top-0 h-full w-full sm:w-[380px] md:w-[400px] bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-2xl border-l border-slate-200 dark:border-slate-800 transform transition-all duration-300 ease-out ${
+            showNotifications ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-primary-50 to-indigo-50 dark:from-primary-900/20 dark:to-indigo-900/20">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-white dark:bg-slate-800 shadow-sm">
-                <Bell className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Notificaciones</h3>
-                {unreadCount > 0 && (
-                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    {unreadCount} nueva{unreadCount !== 1 ? 's' : ''}
-                  </p>
-                )}
-              </div>
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                Notificaciones
+              </h2>
+              {unreadCount > 0 && (
+                <p className="text-xs text-indigo-500 dark:text-indigo-400 font-medium mt-0.5">
+                  {unreadCount} sin leer
+                </p>
+              )}
             </div>
             <button
               onClick={() => setShowNotifications(false)}
-              className="p-2 rounded-xl text-slate-400 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+              className="p-1.5 sm:p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Content */}
-          <div className="h-[calc(100%-80px)] overflow-y-auto">
+          {/* List */}
+          <div className="h-[calc(100%-72px)] sm:h-[calc(100%-80px)] overflow-y-auto custom-scrollbar">
             {notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full px-6 text-center">
-                <div className="p-4 mb-4 rounded-2xl bg-slate-100 dark:bg-slate-800">
-                  <Bell className="w-12 h-12 text-slate-300 dark:text-slate-600" />
+              <div className="h-full flex flex-col items-center justify-center p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-3 sm:mb-4">
+                  <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-slate-300 dark:text-slate-600" />
                 </div>
-                <p className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Sin notificaciones</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Te avisaremos cuando suceda algo importante.</p>
+                <p className="text-slate-900 dark:text-white font-medium">
+                  Todo tranquilo
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  No tienes notificaciones nuevas.
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {notifications.map((notification) => (
+                {notifications.map((n) => (
                   <div
-                    key={notification.id}
-                    onClick={() => markAsRead(notification.id)}
-                    className={`group relative p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all cursor-pointer ${
-                      !notification.leida ? "bg-primary-50/50 dark:bg-primary-900/10" : ""
+                    key={n.id}
+                    onClick={() => markAsRead(n.id)}
+                    className={`p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors ${
+                      !n.leida ? "bg-indigo-50/30 dark:bg-indigo-900/10" : ""
                     }`}
                   >
-                    <div className="flex gap-4">
-                      <div className={`mt-1 p-2 rounded-xl flex-shrink-0 ${
-                        !notification.leida
-                          ? "bg-primary-100 dark:bg-primary-900/30"
-                          : "bg-slate-100 dark:bg-slate-800"
-                      }`}>
-                        <div className={`w-2 h-2 rounded-full ${
-                          !notification.leida ? "bg-primary-500" : "bg-slate-300 dark:bg-slate-600"
-                        }`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm mb-1 ${
-                          !notification.leida
-                            ? "font-bold text-slate-900 dark:text-white"
-                            : "font-semibold text-slate-700 dark:text-slate-300"
-                        }`}>
-                          {notification.titulo}
+                    <div className="flex gap-3">
+                      <div
+                        className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
+                          !n.leida ? "bg-indigo-500" : "bg-transparent"
+                        }`}
+                      ></div>
+                      <div>
+                        <p
+                          className={`text-sm mb-1 ${
+                            !n.leida
+                              ? "font-semibold text-slate-900 dark:text-white"
+                              : "text-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          {n.titulo}
                         </p>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                          {notification.mensaje}
+                        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                          {n.mensaje}
                         </p>
-                        <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
-                          {formatRelativeTime(notification.creada_en)}
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-medium uppercase tracking-wide">
+                          {formatRelativeTime(n.creada_en)}
                         </p>
                       </div>
                     </div>
@@ -324,123 +459,150 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* User Menu Panel - Pantalla completa */}
+      {/* --- USER MENU PANEL --- */}
       <div
         ref={userMenuRef}
-        className={`fixed inset-0 z-50 transition-all duration-500 ${
+        className={`fixed inset-0 z-50 transition-all duration-300 ${
           showUserMenu ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
-        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowUserMenu(false)} />
-        <div className={`absolute right-0 top-0 h-full w-full sm:w-[400px] bg-white dark:bg-slate-900 shadow-2xl transform transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-          showUserMenu ? "translate-x-0" : "translate-x-full"
-        }`}>
-          {/* Header with gradient */}
-          <div className="relative h-48 bg-gradient-to-br from-primary-500 via-primary-600 to-indigo-600 overflow-hidden">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzBoLTJ2Mmgydi0yem0tNCAwdi0yaDJ2Mmgydi0yaDJ2Mmgydi0yaDJ2LTJoLTJ2LTJoMnYtMmgtMnYtMmgydi0yaC0ydi0yaC0ydjJoLTJ2LTJoLTJ2MmgtMnYtMmgtMnYyaC0ydi0yaC0ydjJoLTJ2MmgydjJoLTJ2MmgydjJoLTJ2MmgydjJoMnYyaDJ2LTJoMnYyaDJ2LTJoMnYyaDJ2LTJoMnYtMmgtMnYtMmgydi0yem0tMiAyaC0ydi0yaDJ2MnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-20"></div>
+        <div
+          className="absolute inset-0 bg-slate-900/20 dark:bg-slate-950/40 backdrop-blur-sm transition-opacity"
+          onClick={() => setShowUserMenu(false)}
+        />
+        <div
+          className={`absolute right-0 top-0 h-full w-full sm:w-[340px] md:w-[380px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-200 dark:border-slate-800 transform transition-all duration-300 ease-out ${
+            showUserMenu ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {/* Header: Profile Summary */}
+          <div className="relative h-36 sm:h-40 bg-slate-50 dark:bg-slate-800/50 overflow-hidden">
+            {/* Decorative Background Pattern */}
+            <div
+              className="absolute inset-0 opacity-10 dark:opacity-5"
+              style={{
+                backgroundImage:
+                  "radial-gradient(#4f46e5 1px, transparent 1px)",
+                backgroundSize: "24px 24px",
+              }}
+            ></div>
 
             <button
               onClick={() => setShowUserMenu(false)}
-              className="absolute top-4 right-4 p-2 rounded-xl bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white dark:bg-slate-700 shadow-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
 
-            <div className="relative h-full flex flex-col items-center justify-center px-6">
-              <div className="relative mb-4">
-                <div className="w-24 h-24 rounded-2xl bg-white dark:bg-slate-800 p-1 shadow-xl">
-                  <div className="w-full h-full rounded-xl bg-gradient-to-br from-primary-400 via-primary-500 to-indigo-500 flex items-center justify-center">
+            <div className="relative flex flex-col items-center justify-center h-full pt-4">
+              <div className="relative mb-2 sm:mb-3">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-white dark:bg-slate-800 shadow-md">
+                  <div className="w-full h-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex items-center justify-center">
                     {user?.avatar_url ? (
-                      <img src={user.avatar_url} alt={user.nombre} className="w-full h-full object-cover rounded-xl" />
+                      <img
+                        src={user.avatar_url}
+                        className="w-full h-full object-cover"
+                        alt={user?.nombre}
+                      />
                     ) : (
-                      <span className="text-3xl font-black text-white">
-                        {user?.nombre?.charAt(0)}{user?.apellido?.charAt(0)}
+                      <span className="text-2xl font-bold text-slate-500 dark:text-slate-400">
+                        {user?.nombre?.charAt(0)}
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white dark:border-slate-800 flex items-center justify-center">
-                  <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-                </div>
+                <div className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
               </div>
-              <h3 className="text-2xl font-black text-white mb-1">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                 {user?.nombre} {user?.apellido}
               </h3>
-              <p className="text-sm font-medium text-white/80 mb-1">{user?.email}</p>
-              <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs font-bold text-white uppercase tracking-wider">
+              <span className="text-[10px] sm:text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-full mt-1">
                 {getRoleDisplay(user?.rol)}
               </span>
             </div>
           </div>
 
-          {/* Menu Options */}
-          <div className="p-6 space-y-2">
-            <button className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all group">
-              <div className="p-3 rounded-xl bg-white dark:bg-slate-900 shadow-sm group-hover:shadow-md transition-shadow">
-                <User className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+          {/* Menu Actions */}
+          <div className="p-3 sm:p-4 space-y-1">
+            <p className="px-4 py-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              Cuenta
+            </p>
+
+            <button className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors group">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">
+                <User className="w-4 h-4" />
               </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-bold text-slate-900 dark:text-white">Mi Perfil</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Ver y editar información</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-400" />
+              <span className="text-sm font-medium">Mi Perfil</span>
             </button>
 
-            <button className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all group">
-              <div className="p-3 rounded-xl bg-white dark:bg-slate-900 shadow-sm group-hover:shadow-md transition-shadow">
-                <Key className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <button className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors group">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">
+                <Settings className="w-4 h-4" />
               </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-bold text-slate-900 dark:text-white">Cambiar Contraseña</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Actualizar seguridad</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-400" />
+              <span className="text-sm font-medium">Configuración</span>
             </button>
 
-            <button className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all group">
-              <div className="p-3 rounded-xl bg-white dark:bg-slate-900 shadow-sm group-hover:shadow-md transition-shadow">
-                <Bell className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <p className="px-4 py-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-4">
+              Soporte
+            </p>
+
+            <button className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors group">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">
+                <HelpCircle className="w-4 h-4" />
               </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-bold text-slate-900 dark:text-white">Notificaciones</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Preferencias de avisos</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-400" />
+              <span className="text-sm font-medium">Centro de Ayuda</span>
             </button>
           </div>
 
-          {/* Logout Button */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 backdrop-blur-sm">
+          {/* Logout */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-white via-white dark:from-slate-900 dark:via-slate-900 to-transparent">
             <button
-              onClick={logout}
-              className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold shadow-lg shadow-rose-500/30 hover:shadow-xl hover:shadow-rose-500/40 transition-all transform hover:scale-[1.02] active:scale-95"
+              onClick={() => {
+                logout();
+                setShowUserMenu(false);
+              }}
+              className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-rose-100 dark:border-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all text-sm font-semibold"
             >
-              <LogOut className="w-5 h-5" />
-              <span>Cerrar Sesión</span>
+              <LogOut className="w-4 h-4" />
+              Cerrar Sesión
             </button>
           </div>
         </div>
       </div>
+
+      {/* --- CUSTOM SCROLLBAR STYLES --- */}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: ${
+            darkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+          };
+          border-radius: 20px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: ${
+            darkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)"
+          };
+        }
+      `}</style>
     </>
   );
 };
 
-// Helper functions (kept simple)
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Buenos días";
-  if (hour < 18) return "Buenas tardes";
-  return "Buenas noches";
-};
-
+// Helpers
 const getRoleDisplay = (role) => {
   const roles = {
-    'ADMIN': 'Administrador',
-    'DIRECCION': 'Dirección',
-    'DOCENTE_AULA': 'Docente de Aula',
-    'DOCENTE': 'Docente'
+    ADMIN: "Administrador",
+    DIRECCION: "Dirección",
+    DOCENTE_AULA: "Docente",
+    DOCENTE: "Docente",
   };
-  return roles[role] || role?.replace('_', ' ');
+  return roles[role] || role;
 };
 
 export default Navbar;

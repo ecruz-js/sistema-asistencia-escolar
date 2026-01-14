@@ -65,7 +65,7 @@ export default (sequelize) => {
       estado_matricula: {
         type: DataTypes.STRING(50),
         allowNull: true,
-        comment: "Estado de la matrícula (Inscrito, Transferido, Retirado)",
+        comment: "Estado de la matrícula (inscrito, transferido, retirado)",
       },
       sigerd_id_estado_matricula: {
         type: DataTypes.INTEGER,

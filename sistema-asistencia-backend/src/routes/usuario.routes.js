@@ -4,8 +4,9 @@ import { verificarToken } from "../middlewares/auth.js";
 import { puedeGestionarUsuarios } from "../middlewares/roles.js";
 import {
   crearUsuarioValidator,
-  actualizarUsuarioValidator,
+  crearMultiplesUsuariosValidator,
   idValidator,
+  updateUserValidator,
 } from "../validators/usuarioValidator.js";
 import manejarErroresValidacion from "../middlewares/validacion.js";
 
@@ -25,10 +26,20 @@ router.get(
   usuarioController.obtenerPorId
 );
 
-// Crear usuario
+// Crear usuario (único o múltiple)
 router.post(
   "/",
-  crearUsuarioValidator,
+  (req, res, next) => {
+    // Selecciona el validator apropiado según si viene array o objeto
+    const validator = Array.isArray(req.body.usuarios)
+      ? crearMultiplesUsuariosValidator
+      : crearUsuarioValidator;
+    
+    // Ejecuta todas las reglas del validator
+    Promise.all(validator.map(v => v.run(req)))
+      .then(() => next())
+      .catch(next);
+  },
   manejarErroresValidacion,
   usuarioController.crear
 );
@@ -36,7 +47,7 @@ router.post(
 // Actualizar usuario
 router.put(
   "/:id",
-  actualizarUsuarioValidator,
+  updateUserValidator,
   manejarErroresValidacion,
   usuarioController.actualizar
 );
@@ -55,14 +66,6 @@ router.patch(
   idValidator,
   manejarErroresValidacion,
   usuarioController.reactivar
-);
-
-// Asignar grados a docente
-router.post(
-  "/:id/asignar-grados",
-  idValidator,
-  manejarErroresValidacion,
-  usuarioController.asignarGrados
 );
 
 export default router;

@@ -15,13 +15,16 @@ export const login = async (req, res, next) => {
       where: { email },
       attributes: [
         "id",
-        "nombre",
-        "apellido",
+        "nombres",
+        "primer_apellido",
+        "segundo_apellido",
+        "cedula",
         "email",
         "password_hash",
         "rol",
         "categoria_personal",
         "activo",
+        "foto_url",
       ],
     });
 

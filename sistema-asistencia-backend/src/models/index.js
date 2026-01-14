@@ -5,7 +5,6 @@ import env from "../config/environment.js";
 import UsuarioModel from "./Usuario.js";
 import GradoModel from "./Grado.js";
 import EstudianteModel from "./Estudiante.js";
-import AsignacionDocenteGradoModel from "./AsignacionDocenteGrado.js";
 import AsistenciaEstudianteModel from "./AsistenciaEstudiante.js";
 import AsistenciaPersonalModel from "./AsistenciaPersonal.js";
 import RegistroAsistenciaGradoModel from "./RegistroAsistenciaGrado.js";
@@ -42,7 +41,6 @@ const sequelize = new Sequelize(
 const Usuario = UsuarioModel(sequelize);
 const Grado = GradoModel(sequelize);
 const Estudiante = EstudianteModel(sequelize);
-const AsignacionDocenteGrado = AsignacionDocenteGradoModel(sequelize);
 const AsistenciaEstudiante = AsistenciaEstudianteModel(sequelize);
 const AsistenciaPersonal = AsistenciaPersonalModel(sequelize);
 const RegistroAsistenciaGrado = RegistroAsistenciaGradoModel(sequelize);
@@ -55,19 +53,6 @@ const LogAuditoria = LogAuditoriaModel(sequelize);
 
 // Definir relaciones entre modelos
 const setupAssociations = () => {
-  // Usuario -> Grado (Docente tiene muchos grados asignados)
-  Usuario.belongsToMany(Grado, {
-    through: AsignacionDocenteGrado,
-    foreignKey: "docente_id",
-    as: "gradosAsignados",
-  });
-
-  Grado.belongsToMany(Usuario, {
-    through: AsignacionDocenteGrado,
-    foreignKey: "grado_id",
-    as: "docentes",
-  });
-
   // Grado -> Estudiante
   Grado.hasMany(Estudiante, {
     foreignKey: "grado_id",
@@ -213,7 +198,6 @@ const db = {
   Usuario,
   Grado,
   Estudiante,
-  AsignacionDocenteGrado,
   AsistenciaEstudiante,
   AsistenciaPersonal,
   RegistroAsistenciaGrado,

@@ -29,11 +29,9 @@ const Button = ({
 
   return (
     <button
-      className={`${baseClasses} ${variants[variant]} ${
-        sizes[size]
-      } ${className} ${
-        disabled || loading ? "opacity-50 cursor-not-allowed" : ""
-      }`}
+      className={`${baseClasses} ${variants[variant]} ${sizes[size]
+        } ${className} ${disabled || loading ? "opacity-50 cursor-not-allowed" : ""
+        }`}
       disabled={disabled || loading}
       {...props}
     >

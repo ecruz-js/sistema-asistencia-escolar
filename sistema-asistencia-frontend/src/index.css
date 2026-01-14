@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Configure dark mode to use class-based detection instead of media query */
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Tus colores custom - mantenemos la misma paleta que tenías */
   --color-primary-50: #eff6ff;
@@ -65,12 +68,24 @@
   .dark ::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-500;
   }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+  }
 }
 
 /* Componentes custom - ahora con @utility (reemplaza @layer components) */
 @utility btn {
-  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200
-         focus:outline-none focus:ring-2 focus:ring-offset-2;
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
 }
 
 @utility btn-primary {
@@ -95,8 +110,7 @@
 }
 
 @utility input {
-  @apply w-full px-4 py-2 border border-gray-300 rounded-lg
-         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
 }
 
 @utility label {

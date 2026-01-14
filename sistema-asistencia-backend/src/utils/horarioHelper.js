@@ -1,5 +1,5 @@
 import db from "../models/index.js";
-import { parseTime, getCurrentTime, isTimeInRange } from "./dateHelper.js";
+import { getCurrentTime, isTimeInRange } from "./dateHelper.js";
 
 /**
  * Verificar si está dentro del horario de toma de asistencia

@@ -2,7 +2,7 @@ import db from "../models/index.js";
 import { successResponse, errorResponse } from "../utils/responseHelper.js";
 import { Op } from "sequelize";
 import logger from "../utils/logger.js";
-import { getTodayDate } from "../utils/dateHelper.js";
+import { getTodayDate, getCurrentTime } from "../utils/dateHelper.js";
 import {
   estaDentroHorarioAsistencia,
   estaDentroHorarioModificacion,
@@ -11,7 +11,7 @@ import {
 import notificacionService from "../services/notificacionService.js";
 import { ROLES } from "../config/constants.js";
 
-// Obtener grados asignados al docente actual
+// Obtener todos los grados disponibles (todos los docentes pueden ver todos los grados)
 export const misGrados = async (req, res, next) => {
   try {
     const fecha = req.query.fecha || getTodayDate();
@@ -19,48 +19,40 @@ export const misGrados = async (req, res, next) => {
       "año_escolar_actual"
     );
 
-    // Obtener grados asignados
-    const asignaciones = await db.AsignacionDocenteGrado.findAll({
+    // Obtener todos los grados activos
+    const grados = await db.Grado.findAll({
       where: {
-        docente_id: req.usuario.id,
-        año_escolar: añoEscolar,
         activo: true,
+        año_escolar: añoEscolar,
       },
       include: [
         {
-          model: db.Grado,
-          as: "grado",
+          model: db.Estudiante,
+          as: "estudiantes",
           where: { activo: true },
-          include: [
-            {
-              model: db.Estudiante,
-              as: "estudiantes",
-              where: { activo: true },
-              required: false,
-              attributes: ["id"],
-            },
-          ],
+          required: false,
+          attributes: ["id"],
         },
       ],
     });
 
     // Verificar si cada grado tiene asistencia completada para la fecha
     const gradosConEstado = await Promise.all(
-      asignaciones.map(async (asignacion) => {
+      grados.map(async (grado) => {
         const registro = await db.RegistroAsistenciaGrado.findOne({
           where: {
-            grado_id: asignacion.grado.id,
+            grado_id: grado.id,
             fecha,
           },
         });
 
         return {
-          id: asignacion.grado.id,
-          nombre: asignacion.grado.nombre,
-          nivel: asignacion.grado.nivel,
-          seccion: asignacion.grado.seccion,
-          total_estudiantes: asignacion.grado.estudiantes
-            ? asignacion.grado.estudiantes.length
+          id: grado.id,
+          nombre: grado.nombre,
+          nivel: grado.nivel,
+          seccion: grado.seccion,
+          total_estudiantes: grado.estudiantes
+            ? grado.estudiantes.length
             : 0,
           asistencia_completada: registro ? registro.completada : false,
           hora_completada: registro ? registro.hora_completada : null,
@@ -90,32 +82,23 @@ export const obtenerListaEstudiantes = async (req, res, next) => {
     const { gradoId } = req.params;
     const fecha = req.query.fecha || getTodayDate();
 
-    // Verificar que el grado existe y el docente tiene acceso
-    const grado = await db.Grado.findByPk(gradoId, {
-      include: [
-        {
-          model: db.Usuario,
-          as: "docentes",
-          through: {
-            where: { activo: true },
-          },
-          attributes: ["id"],
-        },
-      ],
-    });
+    // Verificar que el grado existe
+    const grado = await db.Grado.findByPk(gradoId);
 
     if (!grado) {
       return errorResponse(res, "Grado no encontrado", 404);
     }
 
-    // Verificar permiso (admin, dirección, o docente asignado)
+    if (!grado.activo) {
+      return errorResponse(res, "El grado no está activo", 400);
+    }
+
+    // Verificar permiso (admin, dirección, o docente)
     const esAdmin = req.usuario.rol === ROLES.ADMIN;
     const esDireccion = req.usuario.rol === ROLES.DIRECCION;
-    const esDocenteAsignado = grado.docentes.some(
-      (d) => d.id === req.usuario.id
-    );
+    const esDocente = req.usuario.rol === ROLES.DOCENTE_AULA;
 
-    if (!esAdmin && !esDireccion && !esDocenteAsignado) {
+    if (!esAdmin && !esDireccion && !esDocente) {
       return errorResponse(
         res,
         "No tienes permiso para tomar asistencia en este grado",
@@ -222,22 +205,11 @@ export const tomarAsistencia = async (req, res, next) => {
     }
 
     // Verificar permisos
-    const añoEscolar = await db.ConfiguracionSistema.getValor(
-      "año_escolar_actual"
-    );
-    const asignacion = await db.AsignacionDocenteGrado.findOne({
-      where: {
-        docente_id: req.usuario.id,
-        grado_id: gradoId,
-        año_escolar: añoEscolar,
-        activo: true,
-      },
-    });
-
     const esAdmin = req.usuario.rol === ROLES.ADMIN;
     const esDireccion = req.usuario.rol === ROLES.DIRECCION;
+    const esDocente = req.usuario.rol === ROLES.DOCENTE_AULA;
 
-    if (!esAdmin && !esDireccion && !asignacion) {
+    if (!esAdmin && !esDireccion && !esDocente) {
       await transaction.rollback();
       return errorResponse(
         res,
@@ -252,9 +224,11 @@ export const tomarAsistencia = async (req, res, next) => {
       if (!dentroHorario) {
         await transaction.rollback();
         const horarios = await obtenerMensajeHorario();
+        const horaServidor = getCurrentTime();
+        const tz = process.env.APP_TIMEZONE || "local";
         return errorResponse(
           res,
-          `Fuera del horario de toma de asistencia. Horario permitido: ${horarios.inicio} - ${horarios.limite}`,
+          `Fuera del horario de toma de asistencia. Horario permitido: ${horarios.inicio} - ${horarios.limite}. Hora del servidor: ${horaServidor} (${tz})`,
           400
         );
       }

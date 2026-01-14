@@ -19,9 +19,9 @@ export const ESTADOS_ASISTENCIA = {
 };
 
 export const ESTADOS_MATRICULA = {
-  INSCRITO: 'Inscrito',
-  TRANSFERIDO: 'Transferido',
-  RETIRADO: 'Retirado'
+  INSCRITO: 'inscrito',
+  TRANSFERIDO: 'transferido',
+  RETIRADO: 'retirado'
 };
 
 export const ESTADOS_ENVIO_MINERD = {
@@ -47,9 +47,9 @@ export const TIPOS_NOTIFICACION = {
 export const DIAS_HABILES = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'];
 
 export const CONFIG_DEFAULTS = {
-  AÑO_ESCOLAR: '2025-2026',
-  SINCRONIZACION_AUTOMATICA: true,
-  FRECUENCIA_SINCRONIZACION: 24 // horas
+  año_escolar: '2025-2026',
+  sincronizacion_automatica: true,
+  frecuencia_sincronizacion: 24 // horas
 };
 
 // Export default con todo

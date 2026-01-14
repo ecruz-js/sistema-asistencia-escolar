@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { asistenciaService } from "../services/asistencia.service";
 import toast from "react-hot-toast";
@@ -15,15 +14,6 @@ export const useAsistencia = (fecha) => {
     queryKey: ["mis-grados", fecha],
     queryFn: () => asistenciaService.getMisGrados(fecha),
   });
-
-  // Obtener lista de estudiantes de un grado
-  const getListaEstudiantes = (gradoId) => {
-    return useQuery({
-      queryKey: ["lista-estudiantes", gradoId, fecha],
-      queryFn: () => asistenciaService.getListaEstudiantes(gradoId, fecha),
-      enabled: !!gradoId,
-    });
-  };
 
   // Tomar asistencia
   const tomarAsistenciaMutation = useMutation({
@@ -68,7 +58,6 @@ export const useAsistencia = (fecha) => {
     dentroHorarioModificacion: gradosData?.data?.dentro_horario_modificacion,
     loadingGrados,
     refetchGrados,
-    getListaEstudiantes,
     tomarAsistencia: tomarAsistenciaMutation.mutate,
     tomarAsistenciaLoading: tomarAsistenciaMutation.isPending,
     registrarPersonal: registrarPersonalMutation.mutate,
