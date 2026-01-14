@@ -9,22 +9,22 @@ import {
   Clock,
   FileCheck,
   AlertCircle,
+  Users,
+  GraduationCap,
+  ChevronRight,
+  CheckCircle,
 } from "lucide-react";
 import { useAsistencia } from "../../hooks/useAsistencia";
 import { useUIStore } from "../../store/uiStore";
-import Card from "../../components/common/Card";
-import Button from "../../components/common/Button";
-import Badge from "../../components/common/Badge";
-import Spinner from "../../components/common/Spinner";
-import { formatDate } from "../../utils/formatters";
-import { ESTADOS_ASISTENCIA } from "../../utils/constants";
 import toast from "react-hot-toast";
 import { asistenciaService } from "../../services/asistencia.service";
+import { formatDate } from "../../utils/formatters";
+import { ESTADOS_ASISTENCIA } from "../../utils/constants";
 
 const TomarAsistencia = () => {
   const { gradoId } = useParams();
   const navigate = useNavigate();
-  const { currentDate } = useUIStore();
+  const { currentDate, darkMode } = useUIStore();
 
   const [asistencias, setAsistencias] = useState({});
   const [isModified, setIsModified] = useState(false);
@@ -38,11 +38,9 @@ const TomarAsistencia = () => {
     dentroHorarioModificacion,
   } = useAsistencia(currentDate);
 
-  // Si viene con gradoId en la URL, cargar ese grado
   const selectedGradoId = gradoId || null;
-  console.log(dentroHorarioAsistencia);
 
-  // Obtener lista de estudiantes si hay grado seleccionado
+  // Obtener lista de estudiantes
   const {
     data: estudiantesData,
     isLoading: loadingEstudiantes,
@@ -54,15 +52,13 @@ const TomarAsistencia = () => {
     enabled: !!selectedGradoId,
   });
 
-  // Acceder a los datos: el backend puede devolver directamente o envuelto en data
-  // Intentamos ambos formatos para compatibilidad
   const estudiantes =
     estudiantesData?.data?.estudiantes || estudiantesData?.estudiantes || [];
   const asistenciasExistentes =
     estudiantesData?.data?.asistencias_existentes ||
     estudiantesData?.asistencias_existentes;
 
-  // Inicializar asistencias con datos existentes
+  // Inicializar asistencias
   useEffect(() => {
     if (estudiantes.length > 0) {
       const initialAsistencias = {};
@@ -80,7 +76,6 @@ const TomarAsistencia = () => {
     }
   }, [estudiantes, asistenciasExistentes]);
 
-  // Cambiar estado de un estudiante
   const handleEstadoChange = (estudianteId, estado) => {
     setAsistencias((prev) => ({
       ...prev,
@@ -92,7 +87,6 @@ const TomarAsistencia = () => {
     setIsModified(true);
   };
 
-  // Cambiar observaciones
   const handleObservacionesChange = (estudianteId, observaciones) => {
     setAsistencias((prev) => ({
       ...prev,
@@ -104,7 +98,6 @@ const TomarAsistencia = () => {
     setIsModified(true);
   };
 
-  // Marcar todos como presente
   const handleMarcarTodosPresentes = () => {
     const nuevasAsistencias = {};
     estudiantes.forEach((est) => {
@@ -118,9 +111,7 @@ const TomarAsistencia = () => {
     toast.success("Todos marcados como presentes");
   };
 
-  // Guardar asistencia
   const handleGuardar = async () => {
-    // Validar que todos tengan estado
     const sinEstado = estudiantes.filter((est) => !asistencias[est.id]?.estado);
 
     if (sinEstado.length > 0) {
@@ -130,7 +121,6 @@ const TomarAsistencia = () => {
       return;
     }
 
-    // Preparar datos
     const asistenciasArray = estudiantes.map((est) => ({
       estudiante_id: est.id,
       estado: asistencias[est.id].estado,
@@ -154,28 +144,36 @@ const TomarAsistencia = () => {
   if (loadingGrados) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Spinner size="lg" />
+        <div className="relative">
+          <div className="w-12 h-12 border-3 border-slate-200 dark:border-slate-800 rounded-full" />
+          <div className="absolute top-0 left-0 w-12 h-12 border-3 border-indigo-500 rounded-full border-t-transparent animate-spin" />
+        </div>
       </div>
     );
   }
 
-  // Si no hay grado seleccionado, mostrar lista de grados
+  // Vista de selección de grado
   if (!selectedGradoId) {
     return (
       <div className="space-y-6">
+        {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tomar Asistencia</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+            Tomar Asistencia
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">
             Selecciona un grado para tomar asistencia
           </p>
         </div>
 
         {/* Alerta de horario */}
         {!dentroHorarioAsistencia && (
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-yellow-600" />
-              <p className="text-sm text-yellow-800">
+          <div className="rounded-xl p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
                 Estás fuera del horario normal de toma de asistencia
               </p>
             </div>
@@ -185,55 +183,68 @@ const TomarAsistencia = () => {
         {/* Lista de grados */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {grados.map((grado) => (
-            <Card key={grado.id} padding={true}>
+            <div
+              key={grado.id}
+              onClick={() => navigate(`/asistencia/grado/${grado.id}`)}
+              className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800 transition-all cursor-pointer"
+            >
+              {/* Header */}
               <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {grado.nombre}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {grado.nivel} - Sección {grado.seccion}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                    <GraduationCap className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      {grado.nombre}
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {grado.nivel} - Sección {grado.seccion}
+                    </p>
+                  </div>
                 </div>
                 {grado.completado ? (
-                  <Badge variant="success" size="sm">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
                     Completado
-                  </Badge>
+                  </span>
                 ) : (
-                  <Badge variant="warning" size="sm">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
                     Pendiente
-                  </Badge>
+                  </span>
                 )}
               </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Estudiantes:</span>
-                  <span className="font-medium text-gray-900">
+              {/* Stats */}
+              <div className="mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    Estudiantes
+                  </span>
+                  <span className="text-lg font-bold text-slate-900 dark:text-white">
                     {grado.total_estudiantes}
                   </span>
                 </div>
               </div>
 
-              <Button
-                variant={grado.completado ? "secondary" : "primary"}
-                className="w-full"
-                onClick={() => navigate(`/asistencia/grado/${grado.id}`)}
-              >
-                {grado.completado ? "Ver/Editar" : "Tomar Asistencia"}
-              </Button>
-            </Card>
+              {/* CTA */}
+              <div className="flex items-center justify-between text-sm font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300">
+                <span>
+                  {grado.completado ? "Ver/Editar" : "Tomar Asistencia"}
+                </span>
+                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
           ))}
         </div>
 
+        {/* Empty State */}
         {grados.length === 0 && (
-          <Card>
-            <div className="text-center py-12">
-              <p className="text-gray-500">
-                No tienes grados asignados para tomar asistencia
-              </p>
-            </div>
-          </Card>
+          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-12 text-center shadow-sm">
+            <GraduationCap className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
+            <p className="text-slate-600 dark:text-slate-400 font-semibold">
+              No tienes grados asignados para tomar asistencia
+            </p>
+          </div>
         )}
       </div>
     );
@@ -245,181 +256,208 @@ const TomarAsistencia = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <button
           onClick={() => navigate("/asistencia")}
-          icon={ArrowLeft}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-colors"
         >
+          <ArrowLeft className="w-4 h-4" />
           Volver
-        </Button>
+        </button>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
             {gradoActual?.nombre}
           </h1>
-          <p className="text-gray-500 mt-1">
-            {formatDate(currentDate)} - {estudiantes.length} estudiantes
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
+            {formatDate(currentDate)} · {estudiantes.length} estudiantes
           </p>
         </div>
       </div>
 
-      {/* Alertas */}
+      {/* Alerta fuera de horario */}
       {!dentroHorarioModificacion && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-red-600" />
-            <p className="text-sm text-red-800">
+        <div className="rounded-xl p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+            </div>
+            <p className="text-sm text-rose-800 dark:text-rose-300 font-medium">
               Estás fuera del horario permitido para modificar asistencia
             </p>
           </div>
         </div>
       )}
 
-      {/* Acciones Rápidas */}
-      <Card>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
+      {/* Action Bar */}
+      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-4 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <button
             onClick={handleMarcarTodosPresentes}
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-xs sm:text-sm transition-colors"
           >
-            Marcar Todos Presentes
-          </Button>
+            <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Marcar Todos Presentes</span>
+            <span className="sm:hidden">Todos</span>
+          </button>
 
           <div className="flex-1" />
 
-          {isModified && <Badge variant="warning">Cambios sin guardar</Badge>}
+          {isModified && (
+            <span className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+              Cambios sin guardar
+            </span>
+          )}
 
-          <Button
-            variant="success"
-            icon={Save}
+          <button
             onClick={handleGuardar}
-            loading={tomarAsistenciaLoading}
-            disabled={!isModified}
+            disabled={!isModified || tomarAsistenciaLoading}
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-xs sm:text-sm transition-colors shadow-sm"
           >
-            Guardar Asistencia
-          </Button>
+            <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">
+              {tomarAsistenciaLoading ? "Guardando..." : "Guardar Asistencia"}
+            </span>
+            <span className="sm:hidden">
+              {tomarAsistenciaLoading ? "..." : "Guardar"}
+            </span>
+          </button>
         </div>
-      </Card>
+      </div>
 
       {/* Lista de Estudiantes */}
       {loadingEstudiantes ? (
-        <Card>
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
+        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-12 text-center shadow-sm">
+          <div className="flex items-center justify-center">
+            <div className="relative">
+              <div className="w-12 h-12 border-3 border-slate-200 dark:border-slate-800 rounded-full" />
+              <div className="absolute top-0 left-0 w-12 h-12 border-3 border-indigo-500 rounded-full border-t-transparent animate-spin" />
+            </div>
           </div>
-        </Card>
+        </div>
       ) : (
-        <Card title="Lista de Estudiantes">
-          <div className="space-y-3">
+        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="p-3 sm:p-5 border-b border-slate-100 dark:border-slate-800">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+              Lista de Estudiantes
+            </h2>
+          </div>
+
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {estudiantes.map((estudiante, index) => (
               <div
                 key={estudiante.id}
-                className="p-4 border border-gray-200 rounded-lg hover:border-primary-300 transition-colors"
+                className="p-3 sm:p-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-start sm:items-center gap-2 sm:gap-4">
                   {/* Número */}
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center font-semibold text-gray-600 text-sm">
+                  <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
                     {index + 1}
                   </div>
 
-                  {/* Info Estudiante */}
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">
-                      {estudiante.nombre} {estudiante.nombre2}{" "}
-                      {estudiante.apellido} {estudiante.apellido2}
-                    </p>
-                    {estudiante.codigo_estudiante && (
-                      <p className="text-sm text-gray-500">
-                        Código: {estudiante.codigo_estudiante}
-                      </p>
-                    )}
-                  </div>
+                  <div className="flex-1 flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    {/* Avatar + Info */}
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-[10px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
+                        {estudiante.nombre?.charAt(0)}
+                        {estudiante.apellido?.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white truncate">
+                          {estudiante.nombre} {estudiante.nombre2}{" "}
+                          {estudiante.apellido} {estudiante.apellido2}
+                        </p>
+                        {estudiante.codigo_estudiante && (
+                          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">
+                            Código: {estudiante.codigo_estudiante}
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
-                  {/* Botones de Estado */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() =>
-                        handleEstadoChange(
-                          estudiante.id,
+                    {/* Botones de Estado */}
+                    <div className="flex gap-1.5 sm:gap-2">
+                      {/* Presente */}
+                      <button
+                        onClick={() =>
+                          handleEstadoChange(
+                            estudiante.id,
+                            ESTADOS_ASISTENCIA.PRESENTE
+                          )
+                        }
+                        className={`p-2 sm:p-3 rounded-xl transition-all ${
+                          asistencias[estudiante.id]?.estado ===
                           ESTADOS_ASISTENCIA.PRESENTE
-                        )
-                      }
-                      className={`p-3 rounded-lg transition-all ${
-                        asistencias[estudiante.id]?.estado ===
-                        ESTADOS_ASISTENCIA.PRESENTE
-                          ? "bg-green-500 text-white shadow-md"
-                          : "bg-gray-100 text-gray-600 hover:bg-green-100"
-                      }`}
-                      title="Presente"
-                    >
-                      <CheckCircle2 className="w-5 h-5" />
-                    </button>
+                            ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400"
+                        }`}
+                        title="Presente"
+                      >
+                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
 
-                    <button
-                      onClick={() =>
-                        handleEstadoChange(
-                          estudiante.id,
+                      {/* Tardanza */}
+                      <button
+                        onClick={() =>
+                          handleEstadoChange(
+                            estudiante.id,
+                            ESTADOS_ASISTENCIA.TARDANZA
+                          )
+                        }
+                        className={`p-2 sm:p-3 rounded-xl transition-all ${
+                          asistencias[estudiante.id]?.estado ===
                           ESTADOS_ASISTENCIA.TARDANZA
-                        )
-                      }
-                      className={`p-3 rounded-lg transition-all ${
-                        asistencias[estudiante.id]?.estado ===
-                        ESTADOS_ASISTENCIA.TARDANZA
-                          ? "bg-yellow-500 text-white shadow-md"
-                          : "bg-gray-100 text-gray-600 hover:bg-yellow-100"
-                      }`}
-                      title="Tardanza"
-                    >
-                      <Clock className="w-5 h-5" />
-                    </button>
+                            ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-400"
+                        }`}
+                        title="Tardanza"
+                      >
+                        <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
 
-                    <button
-                      onClick={() =>
-                        handleEstadoChange(
-                          estudiante.id,
+                      {/* Ausente */}
+                      <button
+                        onClick={() =>
+                          handleEstadoChange(
+                            estudiante.id,
+                            ESTADOS_ASISTENCIA.AUSENTE
+                          )
+                        }
+                        className={`p-2 sm:p-3 rounded-xl transition-all ${
+                          asistencias[estudiante.id]?.estado ===
                           ESTADOS_ASISTENCIA.AUSENTE
-                        )
-                      }
-                      className={`p-3 rounded-lg transition-all ${
-                        asistencias[estudiante.id]?.estado ===
-                        ESTADOS_ASISTENCIA.AUSENTE
-                          ? "bg-red-500 text-white shadow-md"
-                          : "bg-gray-100 text-gray-600 hover:bg-red-100"
-                      }`}
-                      title="Ausente"
-                    >
-                      <XCircle className="w-5 h-5" />
-                    </button>
+                            ? "bg-rose-500 text-white shadow-lg shadow-rose-500/30"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400"
+                        }`}
+                        title="Ausente"
+                      >
+                        <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
 
-                    <button
-                      onClick={() =>
-                        handleEstadoChange(
-                          estudiante.id,
+                      {/* Justificado */}
+                      <button
+                        onClick={() =>
+                          handleEstadoChange(
+                            estudiante.id,
+                            ESTADOS_ASISTENCIA.JUSTIFICADO
+                          )
+                        }
+                        className={`p-2 sm:p-3 rounded-xl transition-all ${
+                          asistencias[estudiante.id]?.estado ===
                           ESTADOS_ASISTENCIA.JUSTIFICADO
-                        )
-                      }
-                      className={`p-3 rounded-lg transition-all ${
-                        asistencias[estudiante.id]?.estado ===
-                        ESTADOS_ASISTENCIA.JUSTIFICADO
-                          ? "bg-blue-500 text-white shadow-md"
-                          : "bg-gray-100 text-gray-600 hover:bg-blue-100"
-                      }`}
-                      title="Justificado"
-                    >
-                      <FileCheck className="w-5 h-5" />
-                    </button>
+                            ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400"
+                        }`}
+                        title="Justificado"
+                      >
+                        <FileCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Observaciones */}
-                {(asistencias[estudiante.id]?.estado ===
-                  ESTADOS_ASISTENCIA.AUSENTE ||
-                  asistencias[estudiante.id]?.estado ===
-                    ESTADOS_ASISTENCIA.TARDANZA ||
-                  asistencias[estudiante.id]?.estado ===
-                    ESTADOS_ASISTENCIA.JUSTIFICADO) && (
-                  <div className="mt-3 ml-12">
+                {/* Observaciones (opcional, si está activo) */}
+                {asistencias[estudiante.id]?.estado && (
+                  <div className="mt-3 pl-0 sm:pl-14">
                     <input
                       type="text"
                       placeholder="Observaciones (opcional)"
@@ -427,67 +465,15 @@ const TomarAsistencia = () => {
                       onChange={(e) =>
                         handleObservacionesChange(estudiante.id, e.target.value)
                       }
-                      className="input"
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                     />
                   </div>
                 )}
               </div>
             ))}
           </div>
-
-          {estudiantes.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No hay estudiantes en este grado</p>
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* Resumen */}
-      <Card title="Resumen">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-3 bg-green-50 rounded-lg">
-            <p className="text-2xl font-bold text-green-600">
-              {
-                Object.values(asistencias).filter(
-                  (a) => a.estado === ESTADOS_ASISTENCIA.PRESENTE
-                ).length
-              }
-            </p>
-            <p className="text-sm text-gray-600">Presentes</p>
-          </div>
-          <div className="text-center p-3 bg-red-50 rounded-lg">
-            <p className="text-2xl font-bold text-red-600">
-              {
-                Object.values(asistencias).filter(
-                  (a) => a.estado === ESTADOS_ASISTENCIA.AUSENTE
-                ).length
-              }
-            </p>
-            <p className="text-sm text-gray-600">Ausentes</p>
-          </div>
-          <div className="text-center p-3 bg-yellow-50 rounded-lg">
-            <p className="text-2xl font-bold text-yellow-600">
-              {
-                Object.values(asistencias).filter(
-                  (a) => a.estado === ESTADOS_ASISTENCIA.TARDANZA
-                ).length
-              }
-            </p>
-            <p className="text-sm text-gray-600">Tardanzas</p>
-          </div>
-          <div className="text-center p-3 bg-blue-50 rounded-lg">
-            <p className="text-2xl font-bold text-blue-600">
-              {
-                Object.values(asistencias).filter(
-                  (a) => a.estado === ESTADOS_ASISTENCIA.JUSTIFICADO
-                ).length
-              }
-            </p>
-            <p className="text-sm text-gray-600">Justificados</p>
-          </div>
         </div>
-      </Card>
+      )}
     </div>
   );
 };

@@ -77,7 +77,7 @@ app.get("/health", (req, res) => {
     message: "Servidor funcionando correctamente",
     timestamp: new Date().toISOString(),
     environment: env.nodeEnv,
-  });
+  }); 
 });
 
 // Rutas de la API

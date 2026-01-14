@@ -17,8 +17,8 @@ const Layout = () => {
   }, [location.pathname]);
 
   return (
-    <div className="h-screen w-full flex items-center justify-center p-4">
-      <div className="w-full h-full max-w-[1920px] bg-[#615fff] rounded-[40px] shadow-2xl overflow-hidden relative flex">
+    <div className="h-screen w-full flex items-center justify-center p-0 xl:p-4">
+      <div className="w-full h-full max-w-[1920px] xl:bg-[#615fff] xl:rounded-[40px] overflow-hidden relative flex">
 
         {/* --- SIDEBAR (z-20, fijo como parte del layout) --- */}
         <div className={`hidden lg:block h-full transition-all duration-300 z-20 ${sidebarOpen ? 'w-72' : 'w-0 overflow-hidden'
