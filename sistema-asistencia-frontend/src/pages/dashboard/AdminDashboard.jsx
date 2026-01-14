@@ -97,29 +97,29 @@ const AdminDashboard = () => {
               S
             </div>
             <div>
-              <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Sistema</p>
-              <p className="text-base font-bold text-slate-900 dark:text-white">Asistencia Escolar</p>
+              <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Sistema</p>
+              <p className="text-base font-semibold text-slate-900 dark:text-white">Asistencia Escolar</p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm">
               <Calendar className="w-4 h-4" />
-              <span className="font-semibold">{formatDate(new Date(), 'EEEE, d MMMM yyyy')}</span>
+              <span className="font-medium">{formatDate(new Date(), 'EEEE, d MMMM yyyy')}</span>
             </div>
             <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
             <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Fecha</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Fecha</span>
               <input
                 type="date"
                 value={currentDate}
                 onChange={(e) => setCurrentDate(e.target.value)}
-                className="bg-transparent border-none focus:outline-none text-slate-800 dark:text-slate-100 font-semibold text-sm"
+                className="bg-transparent border-none focus:outline-none text-slate-800 dark:text-slate-100 font-medium text-sm"
               />
             </div>
             <button
               onClick={handleRefresh}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 text-white px-4 py-2 font-semibold text-sm shadow-md hover:bg-indigo-600 hover:shadow-lg transition-all"
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 text-white px-4 py-2 font-medium text-sm shadow-md hover:bg-indigo-600 hover:shadow-lg transition-all"
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               Actualizar
@@ -133,7 +133,7 @@ const AdminDashboard = () => {
 
             {/* Detalles del día */}
             <div className="lg:col-span-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-6">
-              <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Detalles del día</p>
+              <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Detalles del día</p>
               <div className="mt-3">
                 <p className="text-4xl font-bold text-slate-900 dark:text-white">{presentes}</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mt-1">
@@ -143,12 +143,12 @@ const AdminDashboard = () => {
 
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ausentes</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ausentes</p>
                   <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{ausentes}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{pct(ausentes, totalEstudiantes)}%</p>
                 </div>
                 <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tardanzas</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tardanzas</p>
                   <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{tardanzas}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{pct(tardanzas, totalEstudiantes)}%</p>
                 </div>
@@ -157,8 +157,8 @@ const AdminDashboard = () => {
               {/* Gauge de asistencia simplificado */}
               <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-700">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Asistencia</span>
-                  <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{tasaAsistencia.toFixed(1)}%</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Asistencia</span>
+                  <span className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">{tasaAsistencia.toFixed(1)}%</span>
                 </div>
                 <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div
@@ -172,7 +172,7 @@ const AdminDashboard = () => {
             {/* Personal (Centro) */}
             <div className="lg:col-span-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Personal</p>
+                <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Personal</p>
                 <Users className="w-5 h-5 text-slate-400" />
               </div>
 
@@ -188,14 +188,14 @@ const AdminDashboard = () => {
                         <item.icon className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-slate-900 dark:text-white">{item.label}</p>
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">{item.label}</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           {item.presentes} de {item.total}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-slate-900 dark:text-white">{pct(item.presentes, item.total)}%</p>
+                      <p className="text-lg font-semibold text-slate-900 dark:text-white">{pct(item.presentes, item.total)}%</p>
                     </div>
                   </div>
                 ))}
@@ -203,8 +203,8 @@ const AdminDashboard = () => {
 
               <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Total Personal</span>
-                  <span className="text-2xl font-bold text-slate-900 dark:text-white">{totalPersonal}</span>
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Total Personal</span>
+                  <span className="text-2xl font-semibold text-slate-900 dark:text-white">{totalPersonal}</span>
                 </div>
               </div>
             </div>
@@ -213,7 +213,7 @@ const AdminDashboard = () => {
             <div className="lg:col-span-4 space-y-4">
               <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Progreso Grados</p>
+                  <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Progreso Grados</p>
                   <GraduationCap className="w-5 h-5 text-slate-400" />
                 </div>
                 <p className="text-3xl font-bold text-slate-900 dark:text-white">{progresoGrados}%</p>
@@ -230,12 +230,12 @@ const AdminDashboard = () => {
 
               <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Estado MINERD</p>
+                  <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Estado MINERD</p>
                   <Send className="w-5 h-5 text-slate-400" />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xl font-bold text-slate-900 dark:text-white">{minerdStatus.label}</p>
+                    <p className="text-xl font-semibold text-slate-900 dark:text-white">{minerdStatus.label}</p>
                     <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mt-1">{minerdStatus.hint}</p>
                   </div>
                   <div className="h-12 w-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
@@ -245,7 +245,7 @@ const AdminDashboard = () => {
                 {dashboard?.puede_enviar_minerd && !dashboard?.ya_enviado_minerd && (
                   <button
                     onClick={() => (window.location.href = '/direccion/minerd')}
-                    className="mt-4 w-full rounded-xl bg-indigo-500 text-white py-2.5 text-sm font-bold hover:bg-indigo-600 transition-colors shadow-md"
+                    className="mt-4 w-full rounded-xl bg-indigo-500 text-white py-2.5 text-sm font-medium hover:bg-indigo-600 transition-colors shadow-md"
                   >
                     Enviar ahora
                   </button>
@@ -257,10 +257,10 @@ const AdminDashboard = () => {
             <div className="lg:col-span-8">
               <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Actividad Reciente</p>
+                  <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Actividad Reciente</p>
                   <button
                     onClick={() => (window.location.href = '/direccion/grados')}
-                    className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+                    className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
                   >
                     Ver todo →
                   </button>
@@ -278,12 +278,12 @@ const AdminDashboard = () => {
                             <CheckCircle2 className="w-5 h-5" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.grado?.nombre || 'Grado'}</p>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{item.grado?.nombre || 'Grado'}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{item.docente?.nombre || 'Docente'}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0">
-                          <p className="text-sm font-bold text-slate-700 dark:text-slate-300">{item.hora_completada || '--:--'}</p>
+                          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.hora_completada || '--:--'}</p>
                           <ArrowRight className="w-4 h-4 text-slate-400" />
                         </div>
                       </div>
@@ -291,7 +291,7 @@ const AdminDashboard = () => {
                   ) : (
                     <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center">
                       <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                      <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Sin actividad registrada hoy</p>
+                      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Sin actividad registrada hoy</p>
                     </div>
                   )}
                 </div>
@@ -324,7 +324,7 @@ const AdminDashboard = () => {
                           <t.icon className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-slate-900 dark:text-white">{t.title}</p>
+                          <p className="text-sm font-medium text-slate-900 dark:text-white">{t.title}</p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t.subtitle}</p>
                         </div>
                       </div>
@@ -341,7 +341,7 @@ const AdminDashboard = () => {
                       </button>
                     </div>
 
-                    <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    <div className="mt-4 flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
                       <div className={`h-2 w-2 rounded-full ${t.value ? 'bg-indigo-500' : 'bg-slate-400'}`} />
                       <span>{t.value ? 'Activo' : 'Desactivado'}</span>
                     </div>

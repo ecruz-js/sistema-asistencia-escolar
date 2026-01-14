@@ -31,6 +31,9 @@ import EnviarMinerd from "../pages/direccion/EnviarMinerd";
 import ReporteDiario from "../pages/reportes/ReporteDiario";
 import Estadisticas from "../pages/reportes/Estadisticas";
 
+// Configuración Pages
+import Configuracion from "../pages/configuracion/Configuracion";
+
 // Other Pages
 import NotFound from "../pages/NotFound";
 import Unauthorized from "../pages/Unauthorized";
@@ -113,6 +116,16 @@ const AppRoutes = () => {
           <Route index element={<ReporteDiario />} />
           <Route path="estadisticas" element={<Estadisticas />} />
         </Route>
+
+        {/* Configuración Routes */}
+        <Route
+          path="configuracion"
+          element={
+            <RoleRoute allowedRoles={["admin"]}>
+              <Configuracion />
+            </RoleRoute>
+          }
+        />
       </Route>
 
       {/* Error Routes */}

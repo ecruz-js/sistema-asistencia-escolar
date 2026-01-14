@@ -62,4 +62,8 @@ export const ENDPOINTS = {
   GENERAL_STATS: "/reportes/estadisticas-generales",
   STUDENT_REPORT: (id) => `/reportes/estudiante/${id}`,
   GRADE_REPORT: (id) => `/reportes/grado/${id}`,
+
+  // Configuración
+  CONFIGURACION: "/configuracion",
+  CONFIGURACION_BY_CLAVE: (clave) => `/configuracion/${clave}`,
 };

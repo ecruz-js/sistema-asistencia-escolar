@@ -6,6 +6,8 @@ export const asistenciaService = {
     const response = await api.get(ENDPOINTS.MY_GRADES, {
       params: { fecha },
     });
+    console.log("MIS GRADOS RESPONSE:", response);
+
     return response.data;
   },
 

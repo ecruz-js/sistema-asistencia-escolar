@@ -40,6 +40,7 @@ const TomarAsistencia = () => {
 
   // Si viene con gradoId en la URL, cargar ese grado
   const selectedGradoId = gradoId || null;
+  console.log(dentroHorarioAsistencia);
 
   // Obtener lista de estudiantes si hay grado seleccionado
   const {
@@ -294,7 +295,7 @@ const TomarAsistencia = () => {
             icon={Save}
             onClick={handleGuardar}
             loading={tomarAsistenciaLoading}
-            disabled={!isModified || !dentroHorarioModificacion}
+            disabled={!isModified}
           >
             Guardar Asistencia
           </Button>

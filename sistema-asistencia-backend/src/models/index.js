@@ -186,6 +186,17 @@ const setupAssociations = () => {
     foreignKey: "usuario_id",
     as: "usuario",
   });
+
+  // Usuario -> ConfiguracionSistema (quien actualizó)
+  Usuario.hasMany(ConfiguracionSistema, {
+    foreignKey: "actualizado_por",
+    as: "configuracionesActualizadas",
+  });
+
+  ConfiguracionSistema.belongsTo(Usuario, {
+    foreignKey: "actualizado_por",
+    as: "actualizadoPor",
+  });
 };
 
 // Ejecutar asociaciones

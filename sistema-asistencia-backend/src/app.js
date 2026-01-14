@@ -17,7 +17,7 @@ import notificacionRoutes from "./routes/notificacion.routes.js";
 import direccionRoutes from "./routes/direccion.routes.js";
 import minerdRoutes from "./routes/minerd.routes.js";
 import reporteRoutes from "./routes/reporte.routes.js";
-// import configuracionRoutes from "./routes/configuracion.routes.js";
+import configuracionRoutes from "./routes/configuracion.routes.js";
 
 const app = express();
 
@@ -94,7 +94,7 @@ app.use(`${API_PREFIX}/notificaciones`, notificacionRoutes);
 app.use(`${API_PREFIX}/direccion`, direccionRoutes);
 app.use(`${API_PREFIX}/minerd`, minerdRoutes);
 app.use(`${API_PREFIX}/reportes`, reporteRoutes);
-// app.use(`${API_PREFIX}/configuracion`, configuracionRoutes);
+app.use(`${API_PREFIX}/configuracion`, configuracionRoutes);
 
 // ============================================
 // MANEJO DE ERRORES
