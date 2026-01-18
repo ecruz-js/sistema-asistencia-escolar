@@ -7,7 +7,6 @@ export const direccionService = {
       params: { fecha },
     });
 
-    console.log("DIRECCION DASHBOARD RESPONSE:", response);
     return response.data;
   },
 

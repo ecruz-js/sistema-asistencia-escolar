@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { format } from "date-fns";
 
 export const useUIStore = create(
   persist(
@@ -7,7 +8,7 @@ export const useUIStore = create(
       sidebarOpen: true,
       loading: false,
       darkMode: false,
-      currentDate: new Date().toISOString().split("T")[0],
+      currentDate: format(new Date(), "yyyy-MM-dd"),
 
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),

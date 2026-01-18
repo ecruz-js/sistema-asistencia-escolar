@@ -150,11 +150,11 @@ export const obtenerListaEstudiantes = async (req, res, next) => {
         fecha_nacimiento: estudiante.fecha_nacimiento,
         asistencia: asistencia
           ? {
-              estado: asistencia.estado,
-              hora_registro: asistencia.hora_registro,
-              modificado: asistencia.modificado,
-              observaciones: asistencia.observaciones,
-            }
+            estado: asistencia.estado,
+            hora_registro: asistencia.hora_registro,
+            modificado: asistencia.modificado,
+            observaciones: asistencia.observaciones,
+          }
           : null,
       };
     });
@@ -333,7 +333,7 @@ export const tomarAsistencia = async (req, res, next) => {
       .notificarDireccionGradoCompletado(
         grado.id,
         grado.nombre,
-        `${req.usuario.nombre} ${req.usuario.apellido}`
+        userFullname(req.usuario)
       )
       .catch((err) => logger.error("Error al notificar dirección:", err));
 
@@ -495,6 +495,10 @@ export const miHistorial = async (req, res, next) => {
   }
 };
 
+
+export const userFullname = (user) => {
+  return `${user.nombres} ${user.primer_apellido} ${user.segundo_apellido}`;
+}
 export default {
   misGrados,
   obtenerListaEstudiantes,

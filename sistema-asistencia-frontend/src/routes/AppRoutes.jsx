@@ -9,8 +9,6 @@ import Login from "../pages/auth/Login";
 
 // Dashboard Pages
 import AdminDashboard from "../pages/dashboard/AdminDashboard";
-import DocenteDashboard from "../pages/dashboard/DocenteDashboard";
-
 // Asistencia Pages
 import TomarAsistencia from "../pages/asistencia/TomarAsistencia";
 import ListaAsistencia from "../pages/asistencia/ListaAsistencia";
@@ -50,7 +48,7 @@ const AppRoutes = () => {
       case "direccion":
         return <AdminDashboard />;
       case "docente_aula":
-        return <DocenteDashboard />;
+        return <AdminDashboard />;
       default:
         return <Navigate to="/unauthorized" replace />;
     }

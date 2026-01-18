@@ -139,76 +139,58 @@ export const dashboard = async (req, res, next) => {
     // ============================================
     // GRADOS PENDIENTES (detalle)
     // ============================================
-    // const gradosPendientes = await db.Grado.findAll({
-    //   where: {
-    //     activo: true,
-    //     año_escolar: añoEscolar,
-    //   },
-    //   include: [
-    //     {
-    //       model: db.Usuario,
-    //       as: "docentes",
-    //       through: {
-    //         where: { activo: true },
-    //       },
-    //       attributes: ["id", "nombre", "apellido", "email"],
-    //     },
-    //     {
-    //       model: db.RegistroAsistenciaGrado,
-    //       as: "registrosAsistencia",
-    //       where: {
-    //         fecha,
-    //         completada: false,
-    //       },
-    //       required: false,
-    //     },
-    //   ],
-    // });
+    const gradosPendientes = await db.Grado.findAll({
+      where: {
+        activo: true,
+        año_escolar: añoEscolar,
+      },
+      include: [
+        {
+          model: db.RegistroAsistenciaGrado,
+          as: "registrosAsistencia",
+          where: {
+            fecha,
+            completada: false,
+          },
+          required: false,
+        },
+      ],
+    });
 
-    // const gradosPendientesDetalle = gradosPendientes
-    //   .filter((grado) => {
-    //     // Verificar si NO tiene registro completado
-    //     const registro =
-    //       grado.registrosAsistencia && grado.registrosAsistencia.length > 0;
-    //     return !registro;
-    //   })
-    //   .map((grado) => ({
-    //     id: grado.id,
-    //     nombre: grado.nombre,
-    //     nivel: grado.nivel,
-    //     seccion: grado.seccion,
-    //     docentes: grado.docentes.map((d) => ({
-    //       id: d.id,
-    //       nombre: `${d.nombre} ${d.apellido}`,
-    //       email: d.email,
-    //     })),
-    //   }));
+    const gradosPendientesDetalle = gradosPendientes
+      .filter((grado) => {
+        // Verificar si NO tiene registro completado
+        const registro =
+          grado.registrosAsistencia && grado.registrosAsistencia.length > 0;
+        return !registro;
+      })
+      .map((grado) => ({
+        id: grado.id,
+        nombre: grado.nombre,
+        nivel: grado.nivel,
+        seccion: grado.seccion,
+      }));
 
     // ============================================
-    // GRADOS COMPLETADOS (últimos 5)
-    // ============================================
-    // const gradosCompletadosRecientes = await db.RegistroAsistenciaGrado.findAll(
-    //   {
-    //     where: {
-    //       fecha,
-    //       completada: true,
-    //     },
-    //     include: [
-    //       {
-    //         model: db.Grado,
-    //         as: "grado",
-    //         attributes: ["id", "nombre", "nivel", "seccion"],
-    //       },
-    //       {
-    //         model: db.Usuario,
-    //         as: "docente",
-    //         attributes: ["id", "nombre", "apellido"],
-    //       },
-    //     ],
-    //     order: [["hora_completada", "DESC"]],
-    //     limit: 5,
-    //   }
-    // );
+    //   GRADOS COMPLETADOS(últimos 5)
+    //     ============================================
+    const gradosCompletadosRecientes = await db.RegistroAsistenciaGrado.findAll(
+      {
+        where: {
+          fecha,
+          completada: true,
+        },
+        include: [
+          {
+            model: db.Grado,
+            as: "grado",
+            attributes: ["id", "nombre", "nivel", "seccion"],
+          }
+        ],
+        order: [["hora_completada", "DESC"]],
+        limit: 5,
+      }
+    );
 
     // ============================================
     // VERIFICAR SI SE PUEDE ENVIAR AL MINERD
@@ -233,8 +215,8 @@ export const dashboard = async (req, res, next) => {
         estudiantes: resumenEstudiantes,
         personal: resumenPersonal,
         progreso_grados: progresoGrados,
-        // grados_pendientes: gradosPendientesDetalle,
-        // grados_completados_recientes: gradosCompletadosRecientes,
+        grados_pendientes: gradosPendientesDetalle,
+        grados_completados_recientes: gradosCompletadosRecientes,
         puede_enviar_minerd: puedeEnviarMinerd && !yaEnviado,
         ya_enviado_minerd: yaEnviado,
         envio_minerd: envioExistente,
@@ -287,11 +269,11 @@ export const detalleGrado = async (req, res, next) => {
         nombre_completo: estudiante.getNombreCompleto(),
         asistencia: asistencia
           ? {
-              estado: asistencia.estado,
-              hora_registro: asistencia.hora_registro,
-              modificado: asistencia.modificado,
-              observaciones: asistencia.observaciones,
-            }
+            estado: asistencia.estado,
+            hora_registro: asistencia.hora_registro,
+            modificado: asistencia.modificado,
+            observaciones: asistencia.observaciones,
+          }
           : null,
       };
     });
@@ -306,12 +288,22 @@ export const detalleGrado = async (req, res, next) => {
         {
           model: db.Usuario,
           as: "docente",
-          attributes: ["id", "nombre", "apellido"],
+          attributes: [
+            "id",
+            "nombres",
+            "primer_apellido",
+            "segundo_apellido",
+          ],
         },
         {
           model: db.Usuario,
           as: "validadoPor",
-          attributes: ["id", "nombre", "apellido"],
+          attributes: [
+            "id",
+            "nombres",
+            "primer_apellido",
+            "segundo_apellido",
+          ],
         },
       ],
     });
@@ -535,15 +527,15 @@ export const listaAsistenciaPersonal = async (req, res, next) => {
       where: { activo: true },
       attributes: [
         "id",
-        "nombre",
-        "apellido",
+        "nombres",
+        "primer_apellido",
         "email",
         "rol",
         "categoria_personal",
       ],
       order: [
-        ["apellido", "ASC"],
-        ["nombre", "ASC"],
+        ["primer_apellido", "ASC"],
+        ["nombres", "ASC"],
       ],
     });
 
@@ -555,16 +547,16 @@ export const listaAsistenciaPersonal = async (req, res, next) => {
       const asistencia = asistencias.find((a) => a.usuario_id === usuario.id);
       return {
         id: usuario.id,
-        nombre_completo: `${usuario.nombre} ${usuario.apellido}`,
+        nombre_completo: `${usuario.nombres} ${usuario.primer_apellido}`,
         email: usuario.email,
         rol: usuario.rol,
         categoria_personal: usuario.categoria_personal,
         asistencia: asistencia
           ? {
-              estado: asistencia.estado,
-              hora_registro: asistencia.hora_registro,
-              observaciones: asistencia.observaciones,
-            }
+            estado: asistencia.estado,
+            hora_registro: asistencia.hora_registro,
+            observaciones: asistencia.observaciones,
+          }
           : null,
       };
     });

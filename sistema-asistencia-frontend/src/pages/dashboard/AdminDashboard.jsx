@@ -1,53 +1,111 @@
-import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo, useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   CheckCircle2,
   AlertCircle,
-  TrendingUp,
+  BarChart3,
   Calendar,
   RefreshCw,
-  ArrowRight,
   Users,
-  UserCheck,
-  UserX,
   Clock,
-  ShieldCheck,
-  Bell,
-  CloudSync,
-  GraduationCap,
-  Send,
-} from 'lucide-react';
-import { direccionService } from '../../services/direccion.service';
-import { useUIStore } from '../../store/uiStore';
-import { formatDate } from '../../utils/formatters';
+  ArrowUpRight,
+  School,
+  XCircle,
+  AlertTriangle,
+  ChevronRight,
+  Filter,
+} from "lucide-react";
+import { direccionService } from "../../services/direccion.service";
+import { useUIStore } from "../../store/uiStore";
+import { formatDate, formatDateAsNumber } from "../../utils/formatters";
+import AttendanceCalendar from "../../components/common/ui/AttendanceCalendar";
+// Componente pequeño para las tarjetas de KPI
+const StatCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  trend,
+  trendLabel,
+  color = "indigo",
+}) => (
+  <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
+    <div
+      className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-${color}-500`}
+    >
+      <Icon className="w-16 h-16 transform group-hover:scale-110 transition-transform" />
+    </div>
+    <div className="relative z-10">
+      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-2">
+        <Icon className="w-4 h-4" />
+        <span className="text-xs font-semibold uppercase tracking-wider">
+          {title}
+        </span>
+      </div>
+      <div className="flex items-baseline gap-2">
+        <span className="text-3xl font-bold text-slate-900 dark:text-white">
+          {value}
+        </span>
+        {subtitle && (
+          <span className="text-sm text-slate-500 font-medium">{subtitle}</span>
+        )}
+      </div>
+      {trend && (
+        <div
+          className={`mt-3 flex items-center gap-1 text-xs font-medium ${
+            trend === "up" ? "text-emerald-600" : "text-rose-600"
+          }`}
+        >
+          {trend === "up" ? (
+            <ArrowUpRight className="w-3 h-3" />
+          ) : (
+            <AlertCircle className="w-3 h-3" />
+          )}
+          {trendLabel}
+        </div>
+      )}
+    </div>
+  </div>
+);
 
 const AdminDashboard = () => {
-  const { currentDate, setCurrentDate, darkMode } = useUIStore();
+  const { currentDate, setCurrentDate } = useUIStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [autoSyncSigerd, setAutoSyncSigerd] = useState(true);
-  const [notificacionesActivas, setNotificacionesActivas] = useState(true);
+  const [viewFilter, setViewFilter] = useState("all"); // all, pending, completed
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['dashboard', currentDate],
+    queryKey: ["dashboard", currentDate],
     queryFn: () => direccionService.getDashboard(currentDate),
   });
 
   const dashboard = data?.data;
 
-  const totalEstudiantes = dashboard?.estudiantes?.total || 0;
-  const presentes = dashboard?.estudiantes?.presentes || 0;
-  const ausentes = dashboard?.estudiantes?.ausentes || 0;
-  const tardanzas = dashboard?.estudiantes?.tardanzas || 0;
+  // Extracción de datos segura
+  const stats = useMemo(() => {
+    if (!dashboard) return null;
+    const est = dashboard.estudiantes || {};
+    const total = est.total || 0;
+    const presentes = est.presentes || 0;
 
-  const totalPersonal = useMemo(() => {
-    const personal = dashboard?.personal;
-    if (!personal) return 0;
-    return (
-      (personal?.docente_aula?.total || 0) +
-      (personal?.directivo?.total || 0) +
-      (personal?.administrativo?.total || 0)
-    );
-  }, [dashboard?.personal]);
+    // Cálculo de porcentaje
+    const tasa = total > 0 ? (presentes / total) * 100 : 0;
+
+    return {
+      estudiantes: { ...est, tasa },
+      personal: dashboard.personal || {},
+      grados: dashboard.progreso_grados || {
+        completados: 0,
+        pendientes: 0,
+        total: 0,
+      },
+      // Simulamos listas de grados si el backend no las devuelve aún (Ajustar según tu API real)
+      listasGrados: {
+        completados: dashboard.grados_completados_recientes || [],
+        // Si el backend no devuelve los pendientes explícitamente, esto debería venir de la API
+        pendientes: dashboard.grados_pendientes_lista || [],
+      },
+    };
+  }, [dashboard]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -57,298 +115,314 @@ const AdminDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-slate-200 dark:border-slate-800 rounded-full" />
-          <div className="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin" />
-        </div>
-        <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">
-          Cargando dashboard...
+      <div className="flex flex-col items-center justify-center h-full min-h-[500px]">
+        <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-4" />
+        <p className="text-slate-500 font-medium animate-pulse">
+          Analizando datos del centro...
         </p>
       </div>
     );
   }
 
-  const tasaAsistencia = dashboard?.estudiantes?.total
-    ? ((dashboard?.estudiantes?.presentes || 0) / dashboard.estudiantes.total) * 100
-    : 0;
-
-  const asistenciaAngle = Math.min(Math.max(tasaAsistencia, 0), 100) * 3.6;
-
-  const progresoGrados = dashboard?.progreso_grados?.porcentaje || 0;
-  const gradosCompletados = dashboard?.progreso_grados?.completados || 0;
-  const gradosPendientes = dashboard?.progreso_grados?.pendientes || 0;
-
-  const minerdStatus = dashboard?.ya_enviado_minerd
-    ? { label: 'Enviado', hint: 'Sincronización completa', icon: CheckCircle2 }
-    : dashboard?.puede_enviar_minerd
-      ? { label: 'Listo', hint: 'Datos completos para enviar', icon: CheckCircle2 }
-      : { label: 'Pendiente', hint: `Faltan ${gradosPendientes} grados`, icon: Clock };
-
-  const pct = (value, total) => (total ? Math.round((value / total) * 100) : 0);
-
   return (
-    <div className="animate-in fade-in duration-500 h-full">
-      <div className="w-full h-full">
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-6 sm:px-8 pt-6 pb-4 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-bold shadow-lg shadow-indigo-500/30">
-              S
-            </div>
-            <div>
-              <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Sistema</p>
-              <p className="text-base font-semibold text-slate-900 dark:text-white">Asistencia Escolar</p>
-            </div>
-          </div>
+    <div className="h-full animate-in fade-in zoom-in-95 duration-500 space-y-6 p-6 sm:p-8 max-w-[1600px] mx-auto">
+      {/* Header Premium */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+            Panel General
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
+            Resumen de operaciones del{" "}
+            <span className="font-medium text-indigo-600 dark:text-indigo-400">
+              {formatDate(formatDateAsNumber(currentDate), "EEEE, d 'de' MMMM")}
+            </span>
+          </p>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm">
-              <Calendar className="w-4 h-4" />
-              <span className="font-medium">{formatDate(new Date(), 'EEEE, d MMMM yyyy')}</span>
+        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="relative">
+            <AttendanceCalendar />
+          </div>
+          <button
+            onClick={handleRefresh}
+            className="p-2.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all"
+            title="Actualizar datos"
+          >
+            <RefreshCw
+              className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Grid Principal de KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Asistencia Global"
+          value={`${stats.estudiantes.tasa.toFixed(1)}%`}
+          subtitle="del alumnado"
+          icon={BarChart3}
+          color="indigo"
+          trend={stats.estudiantes.tasa > 85 ? "up" : "down"}
+          trendLabel={
+            stats.estudiantes.tasa > 85 ? "Nivel óptimo" : "Atención requerida"
+          }
+        />
+        <StatCard
+          title="Estudiantes Hoy"
+          value={stats.estudiantes.presentes}
+          subtitle={`de ${stats.estudiantes.total} inscritos`}
+          icon={Users}
+          color="blue"
+        />
+        <StatCard
+          title="Reporte Grados"
+          value={`${stats.grados.porcentaje}%`}
+          subtitle={`${stats.grados.completados} reportados`}
+          icon={School}
+          color="emerald"
+          trend="up"
+          trendLabel={`${stats.grados.pendientes} pendientes`}
+        />
+        <StatCard
+          title="Ausentismo"
+          value={stats.estudiantes.ausentes}
+          subtitle="Estudiantes faltaron"
+          icon={AlertTriangle}
+          color="rose"
+          trend="down"
+          trendLabel="Impacto crítico"
+        />
+      </div>
+
+      {/* Sección Central: Desglose y Estado de Cursos */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Columna Izquierda (2/3): Estado de los Grados - LA INFORMACIÓN VALIOSA */}
+        <div className="xl:col-span-2 flex flex-col gap-6">
+          {/* Card: Monitor de Entrega de Asistencia */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex-1 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-indigo-500" />
+                  Monitor de Reportes por Grado
+                </h3>
+                <p className="text-sm text-slate-500 mt-1">
+                  Control de qué secciones han enviado la asistencia hoy.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {["all", "pending", "completed"].map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setViewFilter(filter)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors capitalize ${
+                      viewFilter === filter
+                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400"
+                    }`}
+                  >
+                    {filter === "all"
+                      ? "Todos"
+                      : filter === "pending"
+                      ? "Pendientes"
+                      : "Completados"}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Fecha</span>
-              <input
-                type="date"
-                value={currentDate}
-                onChange={(e) => setCurrentDate(e.target.value)}
-                className="bg-transparent border-none focus:outline-none text-slate-800 dark:text-slate-100 font-medium text-sm"
-              />
+
+            <div className="p-0">
+              {/* Aquí simulamos una tabla/lista con estados. En producción usarías los datos reales */}
+              <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-800/50 sticky top-0">
+                    <tr>
+                      <th className="px-6 py-3">Grado / Sección</th>
+                      <th className="px-6 py-3">Docente</th>
+                      <th className="px-6 py-3">Hora</th>
+                      <th className="px-6 py-3 text-right">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {/* Renderizado condicional de la lista de completados */}
+                    {(viewFilter === "all" || viewFilter === "completed") &&
+                      stats.listasGrados.completados.map((item, idx) => (
+                        <tr
+                          key={`comp-${idx}`}
+                          className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                        >
+                          <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
+                            {item.grado?.nombre || "Desconocido"}
+                          </td>
+                          <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
+                            {item.docente?.nombre || "---"}
+                          </td>
+                          <td className="px-6 py-4 text-slate-500 font-mono">
+                            {item.hora_completada}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                              <CheckCircle2 className="w-3 h-3" /> Enviado
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+
+                    {/* Fila Mockup para PENDIENTES (Si tu API aún no devuelve la lista de pendientes explícita, visualiza esto) */}
+                    {(viewFilter === "all" || viewFilter === "pending") &&
+                      Array.from({
+                        length: Math.max(stats.grados.pendientes, 0),
+                      }).map((_, idx) => (
+                        <tr
+                          key={`pend-${idx}`}
+                          className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors bg-rose-50/30 dark:bg-rose-900/10"
+                        >
+                          <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
+                            {/* Aquí iría el nombre real si la API lo da */}
+                            Grado Pendiente #{idx + 1}
+                          </td>
+                          <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
+                            -- No asignado --
+                          </td>
+                          <td className="px-6 py-4 text-slate-500 font-mono">
+                            --:--
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
+                              <Clock className="w-3 h-3" /> Pendiente
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+
+                    {stats.grados.total === 0 && (
+                      <tr>
+                        <td
+                          colSpan="4"
+                          className="px-6 py-8 text-center text-slate-500"
+                        >
+                          No hay grados registrados para mostrar.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <button
-              onClick={handleRefresh}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 text-white px-4 py-2 font-medium text-sm shadow-md hover:bg-indigo-600 hover:shadow-lg transition-all"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Actualizar
-            </button>
           </div>
         </div>
 
-        {/* Contenido Principal */}
-        <div id='main-content' className="px-6 sm:px-8 pb-8 pt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* Columna Derecha (1/3): Resumen y Acciones */}
+        <div className="space-y-6">
+          {/* Gráfico Visual de Asistencia */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-6">
+              Desglose de Asistencia
+            </h3>
 
-            {/* Detalles del día */}
-            <div className="lg:col-span-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-6">
-              <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Detalles del día</p>
-              <div className="mt-3">
-                <p className="text-4xl font-bold text-slate-900 dark:text-white">{presentes}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mt-1">
-                  estudiantes presentes de {totalEstudiantes}
-                </p>
-              </div>
-
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ausentes</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{ausentes}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{pct(ausentes, totalEstudiantes)}%</p>
-                </div>
-                <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tardanzas</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{tardanzas}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{pct(tardanzas, totalEstudiantes)}%</p>
-                </div>
-              </div>
-
-              {/* Gauge de asistencia simplificado */}
-              <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Asistencia</span>
-                  <span className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">{tasaAsistencia.toFixed(1)}%</span>
-                </div>
-                <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(Math.max(tasaAsistencia, 0), 100)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Personal (Centro) */}
-            <div className="lg:col-span-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Personal</p>
-                <Users className="w-5 h-5 text-slate-400" />
-              </div>
-
-              <div className="space-y-4">
-                {[
-                  { label: 'Docentes', presentes: dashboard?.personal?.docente_aula?.presentes || 0, total: dashboard?.personal?.docente_aula?.total || 0, icon: UserCheck },
-                  { label: 'Directivos', presentes: dashboard?.personal?.directivo?.presentes || 0, total: dashboard?.personal?.directivo?.total || 0, icon: ShieldCheck },
-                  { label: 'Administrativos', presentes: dashboard?.personal?.administrativo?.presentes || 0, total: dashboard?.personal?.administrativo?.total || 0, icon: Users }
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400">
-                        <item.icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">{item.label}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {item.presentes} de {item.total}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-semibold text-slate-900 dark:text-white">{pct(item.presentes, item.total)}%</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-800">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Total Personal</span>
-                  <span className="text-2xl font-semibold text-slate-900 dark:text-white">{totalPersonal}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Progreso y MINERD */}
-            <div className="lg:col-span-4 space-y-4">
-              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Progreso Grados</p>
-                  <GraduationCap className="w-5 h-5 text-slate-400" />
-                </div>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white">{progresoGrados}%</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mt-1">
-                  {gradosCompletados} completados
-                </p>
-                <div className="mt-4 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(Math.max(progresoGrados, 0), 100)}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Estado MINERD</p>
-                  <Send className="w-5 h-5 text-slate-400" />
-                </div>
-                <div className="flex items-center justify-between">
+            <div className="space-y-6">
+              {/* Barra de Progreso Maestra */}
+              <div className="relative pt-2">
+                <div className="flex mb-2 items-center justify-between">
                   <div>
-                    <p className="text-xl font-semibold text-slate-900 dark:text-white">{minerdStatus.label}</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mt-1">{minerdStatus.hint}</p>
+                    <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300">
+                      Asistencia Total
+                    </span>
                   </div>
-                  <div className="h-12 w-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                    <minerdStatus.icon className="w-6 h-6" />
+                  <div className="text-right">
+                    <span className="text-xs font-semibold inline-block text-indigo-600 dark:text-indigo-400">
+                      {stats.estudiantes.tasa.toFixed(1)}%
+                    </span>
                   </div>
                 </div>
-                {dashboard?.puede_enviar_minerd && !dashboard?.ya_enviado_minerd && (
-                  <button
-                    onClick={() => (window.location.href = '/direccion/minerd')}
-                    className="mt-4 w-full rounded-xl bg-indigo-500 text-white py-2.5 text-sm font-medium hover:bg-indigo-600 transition-colors shadow-md"
-                  >
-                    Enviar ahora
-                  </button>
+                <div className="overflow-hidden h-3 mb-4 text-xs flex rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div
+                    style={{ width: `${stats.estudiantes.tasa}%` }}
+                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500 transition-all duration-1000"
+                  ></div>
+                </div>
+              </div>
+
+              {/* Estadísticas Secundarias */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <p className="text-xs text-slate-500 mb-1">Tardanzas</p>
+                  <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                    {dashboard?.estudiantes?.tardanzas || 0}
+                  </p>
+                </div>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <p className="text-xs text-slate-500 mb-1">Ausentes</p>
+                  <p className="text-lg font-bold text-rose-600 dark:text-rose-400">
+                    {dashboard?.estudiantes?.ausentes || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Estado MINERD (Accionable) */}
+          <div
+            className={`rounded-2xl border p-6 shadow-sm transition-all ${
+              dashboard?.puede_enviar_minerd && !dashboard?.ya_enviado_minerd
+                ? "bg-indigo-600 border-indigo-500 text-white ring-4 ring-indigo-500/20"
+                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+            }`}
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <h3
+                  className={`font-bold text-lg ${
+                    dashboard?.puede_enviar_minerd &&
+                    !dashboard?.ya_enviado_minerd
+                      ? "text-white"
+                      : "text-slate-900 dark:text-white"
+                  }`}
+                >
+                  Sincronización MINERD
+                </h3>
+                <p
+                  className={`text-sm mt-1 opacity-90 ${
+                    dashboard?.puede_enviar_minerd &&
+                    !dashboard?.ya_enviado_minerd
+                      ? "text-indigo-100"
+                      : "text-slate-500"
+                  }`}
+                >
+                  {dashboard?.ya_enviado_minerd
+                    ? "Los datos han sido enviados exitosamente."
+                    : dashboard?.puede_enviar_minerd
+                    ? "Todos los grados han completado el reporte. Listo para enviar."
+                    : `Esperando ${stats.grados.pendientes} grados para habilitar el envío.`}
+                </p>
+              </div>
+              <div
+                className={`p-3 rounded-xl ${
+                  dashboard?.puede_enviar_minerd &&
+                  !dashboard?.ya_enviado_minerd
+                    ? "bg-white/20"
+                    : "bg-slate-100 dark:bg-slate-800"
+                }`}
+              >
+                {dashboard?.ya_enviado_minerd ? (
+                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                ) : (
+                  <School className="w-6 h-6" />
                 )}
               </div>
             </div>
 
-            {/* Actividad Reciente */}
-            <div className="lg:col-span-8">
-              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">Actividad Reciente</p>
-                  <button
-                    onClick={() => (window.location.href = '/direccion/grados')}
-                    className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
-                  >
-                    Ver todo →
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {dashboard?.grados_completados_recientes?.length > 0 ? (
-                    dashboard.grados_completados_recientes.slice(0, 5).map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="h-10 w-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
-                            <CheckCircle2 className="w-5 h-5" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{item.grado?.nombre || 'Grado'}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{item.docente?.nombre || 'Docente'}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.hora_completada || '--:--'}</p>
-                          <ArrowRight className="w-4 h-4 text-slate-400" />
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center">
-                      <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Sin actividad registrada hoy</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Configuraciones */}
-            <div className="lg:col-span-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-                {[
-                  {
-                    title: 'Sincronización SIGERD',
-                    subtitle: 'Automática',
-                    icon: CloudSync,
-                    value: autoSyncSigerd,
-                    onChange: setAutoSyncSigerd,
-                  },
-                  {
-                    title: 'Notificaciones',
-                    subtitle: 'Recordatorios',
-                    icon: Bell,
-                    value: notificacionesActivas,
-                    onChange: setNotificacionesActivas,
-                  },
-                ].map((t) => (
-                  <div key={t.title} className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
-                          <t.icon className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-white">{t.title}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t.subtitle}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => t.onChange(!t.value)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${t.value ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-700'
-                          }`}
-                        aria-pressed={t.value}
-                      >
-                        <span
-                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${t.value ? 'translate-x-5' : 'translate-x-1'
-                            }`}
-                        />
-                      </button>
-                    </div>
-
-                    <div className="mt-4 flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
-                      <div className={`h-2 w-2 rounded-full ${t.value ? 'bg-indigo-500' : 'bg-slate-400'}`} />
-                      <span>{t.value ? 'Activo' : 'Desactivado'}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {dashboard?.puede_enviar_minerd &&
+              !dashboard?.ya_enviado_minerd && (
+                <button
+                  onClick={() => (window.location.href = "/direccion/minerd")}
+                  className="mt-6 w-full py-3 bg-white text-indigo-600 font-bold rounded-xl shadow-lg hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  Enviar Reporte Oficial <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
           </div>
         </div>
       </div>

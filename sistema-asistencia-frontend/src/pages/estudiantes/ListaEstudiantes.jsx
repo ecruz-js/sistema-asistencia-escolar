@@ -42,14 +42,12 @@ const ListaEstudiantes = () => {
     queryKey: ["grados"],
     queryFn: () => gradoService.getAll(),
   });
-  console.log(gradosData);
 
   const estudiantes = data?.data || [];
   const totalPages = data?.pagination?.totalPages || 1;
   const totalEstudiantes =
     data?.pagination?.total || data?.pagination?.totalCount || 0;
 
-  console.log(estudiantes);
   const handleSelectAll = (e) => {
     if (e.target.checked) {
       setSelectedIds(estudiantes.map((est) => est.id));

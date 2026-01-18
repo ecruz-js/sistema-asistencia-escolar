@@ -93,7 +93,7 @@ class NotificacionService {
     // Obtener usuarios de dirección
     const usuariosDireccion = await db.Usuario.findAll({
       where: {
-        rol: "direccion",
+        rol: ["direccion", "admin"],
         activo: true,
       },
       attributes: ["id"],
@@ -103,7 +103,7 @@ class NotificacionService {
       usuarioId: usuario.id,
       tipo: TIPOS_NOTIFICACION.INFO,
       titulo: "✅ Asistencia completada",
-      mensaje: `El docente ${docenteNombre} completó la asistencia del grado ${gradoNombre}`,
+      mensaje: `El usuario ${docenteNombre} completó la asistencia del grado ${gradoNombre}`,
       prioridad: PRIORIDADES_NOTIFICACION.BAJA,
       metadata: {
         grado_id: gradoId,
@@ -120,7 +120,7 @@ class NotificacionService {
   async notificarDireccionTodosCompletados(fecha) {
     const usuariosDireccion = await db.Usuario.findAll({
       where: {
-        rol: "direccion",
+        rol: ["direccion", "admin"],
         activo: true,
       },
       attributes: ["id"],
@@ -147,7 +147,7 @@ class NotificacionService {
   async notificarDireccionGradosPendientes(gradosPendientes) {
     const usuariosDireccion = await db.Usuario.findAll({
       where: {
-        rol: "direccion",
+        rol: ["direccion", "admin"],
         activo: true,
       },
       attributes: ["id"],

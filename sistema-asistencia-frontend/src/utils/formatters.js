@@ -11,6 +11,12 @@ export const formatDate = (date, formatStr = "dd/MM/yyyy") => {
   }
 };
 
+export const formatDateAsNumber = (dateString) => {
+  if (!dateString) return new Date();
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
 export const formatDateTime = (date) => {
   return formatDate(date, "dd/MM/yyyy HH:mm");
 };
