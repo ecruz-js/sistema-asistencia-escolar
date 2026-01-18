@@ -226,8 +226,8 @@ const AdminDashboard = () => {
                     {filter === "all"
                       ? "Todos"
                       : filter === "pending"
-                      ? "Pendientes"
-                      : "Completados"}
+                        ? "Pendientes"
+                        : "Completados"}
                   </button>
                 ))}
               </div>
@@ -394,8 +394,8 @@ const AdminDashboard = () => {
                   {dashboard?.ya_enviado_minerd
                     ? "Los datos han sido enviados exitosamente."
                     : dashboard?.puede_enviar_minerd
-                    ? "Todos los grados han completado el reporte. Listo para enviar."
-                    : `Esperando ${stats.grados.pendientes} grados para habilitar el envío.`}
+                      ? "Todos los grados han completado el reporte. Listo para enviar."
+                      : `Esperando ${stats.grados.pendientes} grados para habilitar el envío.`}
                 </p>
               </div>
               <div

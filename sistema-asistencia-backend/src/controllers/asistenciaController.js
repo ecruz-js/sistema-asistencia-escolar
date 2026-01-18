@@ -44,7 +44,19 @@ export const misGrados = async (req, res, next) => {
             grado_id: grado.id,
             fecha,
           },
+          include: [
+            {
+              model: db.Usuario,
+              as: "docente",
+              attributes: ["id", "nombres", "primer_apellido", "segundo_apellido"],
+            },
+          ],
         });
+
+        let docenteNombre = null;
+        if (registro && registro.docente) {
+          docenteNombre = `${registro.docente.nombres} ${registro.docente.primer_apellido}`;
+        }
 
         return {
           id: grado.id,
@@ -56,6 +68,8 @@ export const misGrados = async (req, res, next) => {
             : 0,
           asistencia_completada: registro ? registro.completada : false,
           hora_completada: registro ? registro.hora_completada : null,
+          docente_id: registro ? registro.docente_id : null,
+          docente_nombre: docenteNombre,
           puede_modificar: await estaDentroHorarioModificacion(),
         };
       })
@@ -165,7 +179,23 @@ export const obtenerListaEstudiantes = async (req, res, next) => {
         grado_id: gradoId,
         fecha,
       },
+      include: [
+        {
+          model: db.Usuario,
+          as: "docente",
+          attributes: ["id", "nombres", "primer_apellido", "segundo_apellido", "rol"],
+        },
+      ],
     });
+
+    let docenteInfo = null;
+    if (registro && registro.docente) {
+      docenteInfo = {
+        id: registro.docente.id,
+        nombre: `${registro.docente.nombres} ${registro.docente.primer_apellido} ${registro.docente.segundo_apellido || ''}`.trim(),
+        rol: registro.docente.rol,
+      };
+    }
 
     return successResponse(res, {
       grado: {
@@ -179,6 +209,7 @@ export const obtenerListaEstudiantes = async (req, res, next) => {
       total_estudiantes: estudiantes.length,
       asistencia_completada: registro ? registro.completada : false,
       hora_completada: registro ? registro.hora_completada : null,
+      docente_info: docenteInfo,
       puede_modificar: await estaDentroHorarioModificacion(),
       dentro_horario_asistencia: await estaDentroHorarioAsistencia(),
     });
@@ -214,6 +245,24 @@ export const tomarAsistencia = async (req, res, next) => {
       return errorResponse(
         res,
         "No tienes permiso para tomar asistencia en este grado",
+        403
+      );
+    }
+
+    // Verificar si la asistencia ya fue completada por otro docente
+    const registroExistente = await db.RegistroAsistenciaGrado.findOne({
+      where: {
+        grado_id: gradoId,
+        fecha,
+      },
+    });
+
+    // Solo docentes de aula no pueden modificar asistencias ya completadas
+    if (esDocente && registroExistente && registroExistente.completada) {
+      await transaction.rollback();
+      return errorResponse(
+        res,
+        "La asistencia de este grado ya fue completada. Solo administradores o dirección pueden modificarla.",
         403
       );
     }
