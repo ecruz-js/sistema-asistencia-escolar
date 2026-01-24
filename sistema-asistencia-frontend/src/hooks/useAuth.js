@@ -7,9 +7,10 @@ export const useAuth = () => {
   const navigate = useNavigate();
   const { user, setAuth, clearAuth, isAuthenticated } = useAuthStore();
 
-  const login = async (email, password) => {
+  const login = async (credentials) => {
     try {
-      const response = await authService.login(email, password);
+      // credentials puede ser { email, password } o { passcode }
+      const response = await authService.login(credentials);
       const { usuario, token, refreshToken } = response.data;
 
       setAuth(usuario, token, refreshToken);

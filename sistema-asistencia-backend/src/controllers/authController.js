@@ -8,28 +8,70 @@ import logger from "../utils/logger.js";
 // Login
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, passcode } = req.body;
 
-    // Buscar usuario por email
-    const usuario = await db.Usuario.findOne({
-      where: { email },
-      attributes: [
-        "id",
-        "nombres",
-        "primer_apellido",
-        "segundo_apellido",
-        "cedula",
-        "email",
-        "password_hash",
-        "rol",
-        "categoria_personal",
-        "activo",
-        "foto_url",
-      ],
-    });
+    let usuario;
 
-    if (!usuario) {
-      return errorResponse(res, "Credenciales inválidas", 401);
+    // Opción 1: Login con passcode (6 dígitos)
+    if (passcode) {
+      usuario = await db.Usuario.findOne({
+        where: { passcode },
+        attributes: [
+          "id",
+          "nombres",
+          "primer_apellido",
+          "segundo_apellido",
+          "cedula",
+          "email",
+          "password_hash",
+          "passcode",
+          "rol",
+          "categoria_personal",
+          "activo",
+          "foto_url",
+        ],
+      });
+
+      if (!usuario) {
+        return errorResponse(res, "Passcode inválido", 401);
+      }
+    }
+    // Opción 2: Login con email y password
+    else if (email && password) {
+      usuario = await db.Usuario.findOne({
+        where: { email },
+        attributes: [
+          "id",
+          "nombres",
+          "primer_apellido",
+          "segundo_apellido",
+          "cedula",
+          "email",
+          "password_hash",
+          "passcode",
+          "rol",
+          "categoria_personal",
+          "activo",
+          "foto_url",
+        ],
+      });
+
+      if (!usuario) {
+        return errorResponse(res, "Credenciales inválidas", 401);
+      }
+
+      // Verificar password
+      const passwordValido = await usuario.validarPassword(password);
+
+      if (!passwordValido) {
+        return errorResponse(res, "Credenciales inválidas", 401);
+      }
+    } else {
+      return errorResponse(
+        res,
+        "Debe proporcionar passcode o email y password",
+        400
+      );
     }
 
     // Verificar si está activo
@@ -39,13 +81,6 @@ export const login = async (req, res, next) => {
         "Usuario inactivo. Contacta al administrador",
         403
       );
-    }
-
-    // Verificar password
-    const passwordValido = await usuario.validarPassword(password);
-
-    if (!passwordValido) {
-      return errorResponse(res, "Credenciales inválidas", 401);
     }
 
     // Actualizar último acceso

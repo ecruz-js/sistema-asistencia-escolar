@@ -393,6 +393,54 @@ export const reactivar = async (req, res, next) => {
   }
 };
 
+// Regenerar passcode de un usuario
+export const regenerarPasscode = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const usuario = await db.Usuario.findByPk(id);
+
+    if (!usuario) {
+      return errorResponse(res, "Usuario no encontrado", 404);
+    }
+
+    const datosAnteriores = usuario.toJSON();
+
+    // Generar nuevo passcode único
+    const nuevoPasscode = await db.Usuario.generarPasscodeUnico();
+
+    // Actualizar usuario con el nuevo passcode
+    await usuario.update({ passcode: nuevoPasscode });
+
+    // Log de auditoría
+    await db.LogAuditoria.registrar({
+      usuarioId: req.usuario.id,
+      accion: "regenerar_passcode",
+      tablaAfectada: "usuarios",
+      registroId: usuario.id,
+      datosAnteriores,
+      datosNuevos: usuario.toJSON(),
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent"),
+    });
+
+    logger.info(
+      `Usuario ${req.usuario.email} regeneró el passcode de ${usuario.email}`
+    );
+
+    return successResponse(
+      res,
+      {
+        usuario: usuario.toJSON(),
+        passcode: nuevoPasscode,
+      },
+      "Passcode regenerado exitosamente"
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   listar,
   obtenerPorId,
@@ -400,4 +448,5 @@ export default {
   actualizar,
   desactivar,
   reactivar,
+  regenerarPasscode,
 };

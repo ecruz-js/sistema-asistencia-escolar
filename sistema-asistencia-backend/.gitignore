@@ -1,6 +1,9 @@
 # Node modules
 node_modules/
 
+#exports passcodes 
+/exports
+
 # Environment variables
 .env
 .env.local

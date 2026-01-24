@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Lock, Eye, EyeOff, School } from "lucide-react"; // Cambié el icono a 'School'
+import { Mail, Lock, Eye, EyeOff, School, Hash } from "lucide-react"; // Cambié el icono a 'School'
 import { useAuth } from "../../hooks/useAuth";
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
@@ -8,9 +8,11 @@ const Login = () => {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loginMode, setLoginMode] = useState("email"); // "email" o "passcode"
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    passcode: "",
   });
 
   // CONFIGURACIÓN DE IMAGEN
@@ -24,7 +26,13 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
+      // Enviar credenciales según el modo seleccionado
+      const credentials =
+        loginMode === "passcode"
+          ? { passcode: formData.passcode }
+          : { email: formData.email, password: formData.password };
+
+      await login(credentials);
     } catch (error) {
       // Error ya manejado en useAuth
     } finally {
@@ -94,59 +102,114 @@ const Login = () => {
             </p>
           </div>
 
+          {/* Toggle para cambiar entre modos de login */}
+          <div className="mb-6 flex gap-2 bg-slate-100 p-1.5 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setLoginMode("email")}
+              className={`flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${
+                loginMode === "email"
+                  ? "bg-white text-primary-600 shadow-md"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Mail className="w-4 h-4" />
+                Email
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLoginMode("passcode")}
+              className={`flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${
+                loginMode === "passcode"
+                  ? "bg-white text-primary-600 shadow-md"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Hash className="w-4 h-4" />
+                Código
+              </div>
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-5">
-            <Input
-              label="Correo Electrónico"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="docente@escuela.edu.do"
-              icon={Mail}
-              required
-              className="bg-slate-50 border-slate-200 focus:bg-white"
-            />
-
-            <div className="relative">
-              <Input
-                label="Contraseña"
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                icon={Lock}
-                required
-                className="bg-slate-50 border-slate-200 focus:bg-white"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[2.35rem] p-1.5 text-gray-400 hover:text-primary-600 transition-colors rounded-full hover:bg-slate-100"
-              >
-                {showPassword ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between text-xs sm:text-sm">
-              <label className="flex items-center text-gray-500 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="mr-2 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            {loginMode === "email" ? (
+              <>
+                <Input
+                  label="Correo Electrónico"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="docente@escuela.edu.do"
+                  icon={Mail}
+                  required
+                  className="bg-slate-50 border-slate-200 focus:bg-white"
                 />
-                Recuérdame
-              </label>
-              <button
-                type="button"
-                className="text-primary-600 hover:text-primary-800 font-semibold"
-              >
-                ¿Olvidaste tu clave?
-              </button>
-            </div>
+
+                <div className="relative">
+                  <Input
+                    label="Contraseña"
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    icon={Lock}
+                    required
+                    className="bg-slate-50 border-slate-200 focus:bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-[2.35rem] p-1.5 text-gray-400 hover:text-primary-600 transition-colors rounded-full hover:bg-slate-100"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <label className="flex items-center text-gray-500 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mr-2 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    />
+                    Recuérdame
+                  </label>
+                  <button
+                    type="button"
+                    className="text-primary-600 hover:text-primary-800 font-semibold"
+                  >
+                    ¿Olvidaste tu clave?
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div>
+                <Input
+                  label="Código de Acceso"
+                  type="text"
+                  name="passcode"
+                  value={formData.passcode}
+                  onChange={handleChange}
+                  placeholder="123456"
+                  icon={Hash}
+                  required
+                  maxLength={6}
+                  pattern="[0-9]{6}"
+                  className="bg-slate-50 border-slate-200 focus:bg-white text-center text-2xl tracking-widest font-semibold"
+                />
+                <p className="mt-2 text-xs text-gray-500 text-center">
+                  Ingresa tu código de 6 dígitos
+                </p>
+              </div>
+            )}
 
             <Button
               type="submit"

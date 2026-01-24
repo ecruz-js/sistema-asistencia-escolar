@@ -3,8 +3,11 @@ import env from "./config/environment.js";
 import db from "./models/index.js";
 import logger from "./utils/logger.js";
 import inicializarTareas from "./jobs/index.js";
+import { Server } from "socket.io";
+import { createServer } from "http";
 
 const PORT = env.port;
+const httpServer = createServer(app);
 
 // Función para iniciar el servidor
 const iniciarServidor = async () => {
@@ -17,12 +20,24 @@ const iniciarServidor = async () => {
     // Inicializar tareas programadas
     await inicializarTareas();
 
+    //Initialize Socket IO
+    const io = new Server(httpServer, {
+      cors: {
+        origin: "http://localhost:5173",
+        credentials: true,
+      },
+    });
+
+    io.on("connection", (socket) => {
+      console.log("✅ Client Connected: ", socket.id);
+    });
+
     // Iniciar servidor
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       logger.info(`🚀 Servidor ejecutándose en puerto ${PORT}`);
       logger.info(`🌍 Entorno: ${env.nodeEnv}`);
       logger.info(
-        `📡 API disponible en: http://localhost:${PORT}${env.apiPrefix}`
+        `📡 API disponible en: http://localhost:${PORT}${env.apiPrefix}`,
       );
       logger.info(`💚 Health check: http://localhost:${PORT}/health`);
     });

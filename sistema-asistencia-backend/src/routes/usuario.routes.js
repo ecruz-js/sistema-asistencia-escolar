@@ -68,4 +68,12 @@ router.patch(
   usuarioController.reactivar
 );
 
+// Regenerar passcode de usuario (solo admin)
+router.patch(
+  "/:id/regenerar-passcode",
+  idValidator,
+  manejarErroresValidacion,
+  usuarioController.regenerarPasscode
+);
+
 export default router;

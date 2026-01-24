@@ -2,6 +2,10 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import AppRoutes from "./routes/AppRoutes";
+import io from "socket.io-client";
+import { useEffect } from "react";
+
+const socketURL = "http://localhost:5000";
 
 // Configurar React Query
 const queryClient = new QueryClient({
@@ -15,6 +19,25 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+
+  useEffect(() => {
+    console.log(socketURL);
+    const newSocket = io(socketURL, {
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
+    });
+
+    newSocket.on("connect", () => {
+      console.log("Connected to the server");
+    });
+
+    return () => {
+      newSocket.close();
+    };
+  }, []);
+  
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

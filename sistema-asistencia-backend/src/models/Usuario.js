@@ -125,6 +125,21 @@ export default (sequelize) => {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
+      passcode: {
+        type: DataTypes.STRING(6),
+        allowNull: true,
+        unique: {
+          name: "unique_passcode",
+          msg: "Este passcode ya está en uso",
+        },
+        validate: {
+          is: {
+            args: /^[0-9]{6}$/,
+            msg: "El passcode debe tener exactamente 6 dígitos",
+          },
+        },
+        comment: "Código numérico de 6 dígitos para login alternativo",
+      },
       rol: {
         type: DataTypes.STRING(50),
         allowNull: false,
@@ -174,6 +189,10 @@ export default (sequelize) => {
           fields: ["email"],
         },
         {
+          unique: true,
+          fields: ["passcode"],
+        },
+        {
           fields: ["rol"],
         },
         {
@@ -185,6 +204,12 @@ export default (sequelize) => {
       ],
       hooks: {
         beforeCreate: async (usuario) => {
+          // Generar passcode único automáticamente
+          if (!usuario.passcode) {
+            usuario.passcode = await Usuario.generarPasscodeUnico();
+          }
+
+          // Hash del password
           if (usuario.password_hash) {
             const salt = await bcrypt.genSalt(10);
             usuario.password_hash = await bcrypt.hash(
@@ -205,6 +230,35 @@ export default (sequelize) => {
       },
     }
   );
+
+  // Método estático para generar passcode único de 6 dígitos
+  Usuario.generarPasscodeUnico = async function () {
+    let passcode;
+    let existe = true;
+    let intentos = 0;
+    const maxIntentos = 100;
+
+    while (existe && intentos < maxIntentos) {
+      // Generar un número aleatorio de 6 dígitos (100000 a 999999)
+      passcode = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Verificar si ya existe en la base de datos
+      const usuarioExistente = await Usuario.findOne({
+        where: { passcode },
+      });
+
+      existe = usuarioExistente !== null;
+      intentos++;
+    }
+
+    if (intentos >= maxIntentos) {
+      throw new Error(
+        "No se pudo generar un passcode único después de múltiples intentos"
+      );
+    }
+
+    return passcode;
+  };
 
   // Método de instancia para verificar password
   Usuario.prototype.validarPassword = async function (password) {
