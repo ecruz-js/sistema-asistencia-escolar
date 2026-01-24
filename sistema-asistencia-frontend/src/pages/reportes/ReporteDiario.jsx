@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import {
   Calendar,
   Download,
@@ -40,6 +41,15 @@ const COLORS = {
 
 const ReporteDiario = () => {
   const { currentDate, setCurrentDate } = useUIStore();
+  const [searchParams] = useSearchParams();
+
+  // Si hay un parámetro de fecha en la URL, usarlo
+  useEffect(() => {
+    const fechaParam = searchParams.get("fecha");
+    if (fechaParam) {
+      setCurrentDate(fechaParam);
+    }
+  }, [searchParams, setCurrentDate]);
 
   // Obtener reporte diario
   const { data, isLoading, refetch } = useQuery({

@@ -13,6 +13,7 @@ import {
   LogOut,
   Moon,
   Sun,
+  Calendar,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useUIStore } from "../../store/uiStore";
@@ -35,6 +36,7 @@ const Sidebar = () => {
 
     { isSection: true, name: "REPORTES", roles: [ROLES.ADMIN, ROLES.DIRECCION, ROLES.DOCENTE_AULA] },
     { name: "Reportes", href: "/reportes", icon: FileText, roles: [ROLES.ADMIN, ROLES.DIRECCION, ROLES.DOCENTE_AULA] },
+    { name: "Calendario", href: "/reportes/calendario", icon: Calendar, roles: [ROLES.ADMIN, ROLES.DIRECCION, ROLES.DOCENTE_AULA] },
 
     { isSection: true, name: "SISTEMA", roles: [ROLES.ADMIN] },
     { name: "Configuración", href: "/configuracion", icon: Settings, roles: [ROLES.ADMIN] },

@@ -28,6 +28,7 @@ import EnviarMinerd from "../pages/direccion/EnviarMinerd";
 // Reportes Pages
 import ReporteDiario from "../pages/reportes/ReporteDiario";
 import Estadisticas from "../pages/reportes/Estadisticas";
+import CalendarioAsistencia from "../pages/reportes/CalendarioAsistencia";
 
 // Configuración Pages
 import Configuracion from "../pages/configuracion/Configuracion";
@@ -113,6 +114,7 @@ const AppRoutes = () => {
         <Route path="reportes">
           <Route index element={<ReporteDiario />} />
           <Route path="estadisticas" element={<Estadisticas />} />
+          <Route path="calendario" element={<CalendarioAsistencia />} />
         </Route>
 
         {/* Configuración Routes */}
