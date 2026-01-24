@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   format,
   addMonths,
@@ -17,10 +17,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
+  CalendarDays,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { useUIStore } from "../../../store/uiStore";
 import { formatDateAsNumber } from "../../../utils/formatters";
+import { reporteService } from "../../../services/reporte.service";
 
 const AttendanceCalendar = () => {
   const { currentDate: selectedDate, setCurrentDate: onChange } = useUIStore();
@@ -50,28 +53,57 @@ const AttendanceCalendar = () => {
   // --- Lógica del Calendario ---
   const monthStart = startOfMonth(viewDate);
   const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart, { locale: es }); // Empezar lunes/domingo según locale
+  const startDate = startOfWeek(monthStart, { locale: es });
   const endDate = endOfWeek(monthEnd, { locale: es });
 
   const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
-  const weekDays = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"]; // Lunes a Domingo, alineado con locale es
+  const weekDays = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"];
 
-  // --- Simulación de Datos de Asistencia (MOCK) ---
-  // En producción, aquí recibirías un objeto { "2023-08-01": 95, ... }
+  // --- Obtener Datos Reales de Asistencia ---
+  const { data: attendanceData } = useQuery({
+    queryKey: ["calendar-attendance"],
+    queryFn: () => reporteService.getEstadisticasGenerales(),
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+  });
+
+  // Transformar datos de la API en un mapa { "2024-01-15": 95.5, ... }
+  const attendanceMap = useMemo(() => {
+    if (!attendanceData?.data) return {};
+
+    const map = {};
+    const totalEstudiantes = attendanceData.data.totales?.estudiantes || 1;
+
+    // Procesar el array asistencias_por_fecha
+    const asistencias = attendanceData.data.asistencias_por_fecha || [];
+    asistencias.forEach((item) => {
+      if (item.fecha && item.presentes !== undefined) {
+        // Calcular porcentaje de asistencia
+        const porcentaje = (item.presentes / totalEstudiantes) * 100;
+        map[item.fecha] = porcentaje;
+      }
+    });
+
+    return map;
+  }, [attendanceData]);
+
   const getDayStatus = (day) => {
-    const dayNum = day.getDate();
-    const random = (dayNum * 7) % 100;
+    const dayFormatted = format(day, "yyyy-MM-dd");
 
     // Convertimos el día actual del bucle a "yyyy-MM-dd" y comparamos strings idénticos.
-    if (format(day, "yyyy-MM-dd") === selectedDate) return "selected";
+    if (dayFormatted === selectedDate) return "selected";
 
     if (!isSameMonth(day, viewDate)) return "disabled";
 
-    // ... resto de la lógica (randoms)
-    if (random > 85) return "good";
-    if (random > 60) return "warning";
-    if (random > 0) return "bad";
-    return "neutral";
+    // Usar datos reales de asistencia
+    const attendance = attendanceMap[dayFormatted];
+
+    // Si no hay datos para ese día, mostrarlo neutral
+    if (attendance === undefined) return "neutral";
+
+    // Clasificar según el porcentaje de asistencia
+    if (attendance >= 85) return "good";
+    if (attendance >= 70) return "warning";
+    return "bad";
   };
 
   const getStyles = (status) => {
@@ -110,7 +142,9 @@ const AttendanceCalendar = () => {
       >
         <CalendarIcon className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
         <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-          {format(formatDateAsNumber(selectedDate), "EEEE, d 'de' MMMM", { locale: es })}
+          {format(formatDateAsNumber(selectedDate), "EEEE, d 'de' MMMM", {
+            locale: es,
+          })}
         </span>
         <div
           className={`ml-2 w-2 h-2 rounded-full ${
@@ -134,9 +168,25 @@ const AttendanceCalendar = () => {
               <ChevronLeft className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-bold text-slate-900 dark:text-white capitalize">
-              {format(viewDate, "MMMM yyyy", { locale: es })}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white capitalize">
+                {format(viewDate, "MMMM yyyy", { locale: es })}
+              </h3>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const today = new Date();
+                  setViewDate(today);
+                  onChange(format(today, "yyyy-MM-dd"));
+                  setIsOpen(false);
+                }}
+                className="px-2.5 py-1 text-xs font-medium rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 transition-colors flex items-center gap-1"
+                title="Ir a hoy"
+              >
+                <CalendarDays className="w-3 h-3" />
+                Hoy
+              </button>
+            </div>
 
             <button
               onClick={(e) => {

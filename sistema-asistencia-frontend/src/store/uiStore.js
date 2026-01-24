@@ -40,6 +40,10 @@ export const useUIStore = create(
         if (state?.darkMode) {
           document.documentElement.classList.add('dark');
         }
+        // Reset date to current date on page reload
+        if (state) {
+          state.currentDate = format(new Date(), "yyyy-MM-dd");
+        }
       },
     }
   )
