@@ -47,9 +47,16 @@ export default {
 
   // MINERD
   minerd: {
-    apiUrl: process.env.MINERD_API_URL,
-    apiKey: process.env.MINERD_API_KEY,
-    centroId: process.env.MINERD_CENTRO_ID
+    loginEndpoint: process.env.MINERD_LOGIN_ENDPOINT,
+    username: process.env.MINERD_USERNAME,
+    password: process.env.MINERD_PASSWORD,
+    attendanceId: parseInt(process.env.MINERD_ATTENDANCE_ID) || 0,
+    regionalId: parseInt(process.env.MINERD_REGIONAL_ID),
+    districtId: parseInt(process.env.MINERD_DISTRICT_ID),
+    centerId: process.env.MINERD_CENTER_ID,
+    directorIdCard: process.env.MINERD_DIRECTOR_ID_CARD,
+    directorName: process.env.MINERD_DIRECTOR_NAME,
+    directorPhone: process.env.MINERD_DIRECTOR_PHONE
   },
 
   // Horarios

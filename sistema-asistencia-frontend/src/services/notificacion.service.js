@@ -16,7 +16,7 @@ export const notificacionService = {
 
   markAsRead: async (id) => {
     const response = await api.put(ENDPOINTS.MARK_NOTIFICATION_READ(id));
-    return response.data;
+    return response.data;F
   },
 
   markAllAsRead: async () => {

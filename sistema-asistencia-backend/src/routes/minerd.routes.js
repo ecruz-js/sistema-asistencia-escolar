@@ -45,4 +45,12 @@ router.get(
   minerdController.obtenerDetalle
 );
 
+// Cancelar un envío pendiente
+router.delete(
+  '/envio/:id',
+  param('id').isInt().withMessage('ID inválido'),
+  manejarErroresValidacion,
+  minerdController.cancelarEnvio
+);
+
 export default router;

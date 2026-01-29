@@ -295,16 +295,6 @@ export const detalleGrado = async (req, res, next) => {
             "segundo_apellido",
           ],
         },
-        {
-          model: db.Usuario,
-          as: "validadoPor",
-          attributes: [
-            "id",
-            "nombres",
-            "primer_apellido",
-            "segundo_apellido",
-          ],
-        },
       ],
     });
 
@@ -326,53 +316,7 @@ export const detalleGrado = async (req, res, next) => {
   }
 };
 
-// Validar asistencia del día
-export const validarAsistencia = async (req, res, next) => {
-  try {
-    const fecha = req.query.fecha || getTodayDate();
 
-    // Obtener todos los registros de asistencia del día
-    const registros = await db.RegistroAsistenciaGrado.findAll({
-      where: { fecha },
-    });
-
-    // Marcar todos como validados
-    for (const registro of registros) {
-      await registro.update({
-        validada: true,
-        validada_por: req.usuario.id,
-        hora_validacion: new Date(),
-      });
-    }
-
-    // Log de auditoría
-    await db.LogAuditoria.registrar({
-      usuarioId: req.usuario.id,
-      accion: "validar_asistencia_dia",
-      datosNuevos: {
-        fecha,
-        registros_validados: registros.length,
-      },
-      ipAddress: req.ip,
-      userAgent: req.get("user-agent"),
-    });
-
-    logger.info(
-      `Usuario ${req.usuario.email} validó asistencia del día ${fecha}`
-    );
-
-    return successResponse(
-      res,
-      {
-        fecha,
-        registros_validados: registros.length,
-      },
-      "Asistencia validada exitosamente"
-    );
-  } catch (error) {
-    next(error);
-  }
-};
 
 // Enviar recordatorio manual a docentes pendientes
 export const enviarRecordatorio = async (req, res, next) => {
@@ -575,7 +519,6 @@ export const listaAsistenciaPersonal = async (req, res, next) => {
 export default {
   dashboard,
   detalleGrado,
-  validarAsistencia,
   enviarRecordatorio,
   modificarAsistencia,
   listaAsistenciaPersonal,

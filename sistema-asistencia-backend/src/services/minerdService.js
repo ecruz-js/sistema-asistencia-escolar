@@ -64,7 +64,7 @@ class MinerdService {
       });
 
       const personalPorCategoria = {
-        docentes_aula: { total: 0, presentes: 0, ausentes: 0 },
+        docente_aula: { total: 0, presentes: 0, ausentes: 0 },
         directivo: { total: 0, presentes: 0, ausentes: 0 },
         administrativo: { total: 0, presentes: 0, ausentes: 0 },
       };
@@ -111,10 +111,10 @@ class MinerdService {
           justificados: estudiantes.justificados,
         },
         personal: {
-          docentes_aula: {
-            total: personalPorCategoria.docentes_aula.total,
-            presentes: personalPorCategoria.docentes_aula.presentes,
-            ausentes: personalPorCategoria.docentes_aula.ausentes,
+          docente_aula: {
+            total: personalPorCategoria.docente_aula.total,
+            presentes: personalPorCategoria.docente_aula.presentes,
+            ausentes: personalPorCategoria.docente_aula.ausentes,
           },
           personal_directivo: {
             total: personalPorCategoria.directivo.total,

@@ -38,7 +38,6 @@ export const ENDPOINTS = {
   // Dirección
   DIRECTION_DASHBOARD: "/direccion/dashboard",
   DIRECTION_GRADE_DETAIL: (id) => `/direccion/grado/${id}`,
-  VALIDATE_ATTENDANCE: "/direccion/validar",
   SEND_REMINDER: "/direccion/recordatorio",
   MODIFY_ATTENDANCE: "/direccion/modificar-asistencia",
   STAFF_ATTENDANCE: "/direccion/personal",
@@ -47,6 +46,7 @@ export const ENDPOINTS = {
   MINERD_SUMMARY: "/minerd/resumen",
   MINERD_PREPARE: "/minerd/preparar",
   MINERD_CONFIRM: "/minerd/confirmar",
+  MINERD_CANCEL: (id) => `/minerd/envio/${id}`,
   MINERD_HISTORY: "/minerd/historial",
   MINERD_DETAIL: (id) => `/minerd/envio/${id}`,
 

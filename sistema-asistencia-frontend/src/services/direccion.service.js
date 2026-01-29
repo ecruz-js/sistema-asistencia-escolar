@@ -17,13 +17,6 @@ export const direccionService = {
     return response.data;
   },
 
-  validarAsistencia: async (fecha) => {
-    const response = await api.post(ENDPOINTS.VALIDATE_ATTENDANCE, null, {
-      params: { fecha },
-    });
-    return response.data;
-  },
-
   enviarRecordatorio: async (docente_ids) => {
     const response = await api.post(ENDPOINTS.SEND_REMINDER, {
       docente_ids,

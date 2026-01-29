@@ -31,7 +31,6 @@ const Sidebar = () => {
     { name: "Grados", href: "/grados", icon: GraduationCap, roles: [ROLES.ADMIN, ROLES.DIRECCION] },
 
     { isSection: true, name: "DIRECCIÓN", roles: [ROLES.ADMIN, ROLES.DIRECCION] },
-    { name: "Validar Asistencia", href: "/direccion/validar", icon: CheckCircle2, roles: [ROLES.ADMIN, ROLES.DIRECCION] },
     { name: "Enviar al MINERD", href: "/direccion/minerd", icon: Send, roles: [ROLES.ADMIN, ROLES.DIRECCION] },
 
     { isSection: true, name: "REPORTES", roles: [ROLES.ADMIN, ROLES.DIRECCION, ROLES.DOCENTE_AULA] },

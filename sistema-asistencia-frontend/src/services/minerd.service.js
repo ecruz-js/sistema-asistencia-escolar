@@ -6,11 +6,13 @@ export const minerdService = {
     const response = await api.get(ENDPOINTS.MINERD_SUMMARY, {
       params: { fecha },
     });
+    console.log(response.data);
     return response.data;
   },
 
   prepararEnvio: async (fecha) => {
     const response = await api.post(ENDPOINTS.MINERD_PREPARE, { fecha });
+    console.log(response.data);
     return response.data;
   },
 
@@ -28,6 +30,11 @@ export const minerdService = {
 
   getDetalle: async (id) => {
     const response = await api.get(ENDPOINTS.MINERD_DETAIL(id));
+    return response.data;
+  },
+
+  cancelarEnvio: async (id) => {
+    const response = await api.delete(ENDPOINTS.MINERD_CANCEL(id));
     return response.data;
   },
 };

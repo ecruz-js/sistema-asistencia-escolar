@@ -22,7 +22,6 @@ import ListaGrados from "../pages/grados/ListaGrados";
 import DetalleGrado from "../pages/grados/DetalleGrado";
 
 // Dirección Pages
-import ValidarAsistencia from "../pages/direccion/ValidarAsistencia";
 import EnviarMinerd from "../pages/direccion/EnviarMinerd";
 
 // Reportes Pages
@@ -93,14 +92,6 @@ const AppRoutes = () => {
         </Route>
 
         {/* Dirección Routes */}
-        <Route
-          path="direccion/validar"
-          element={
-            <RoleRoute allowedRoles={["admin", "direccion"]}>
-              <ValidarAsistencia />
-            </RoleRoute>
-          }
-        />
         <Route
           path="direccion/minerd"
           element={

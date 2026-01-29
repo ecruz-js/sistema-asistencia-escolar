@@ -27,14 +27,6 @@ router.get(
   direccionController.detalleGrado
 );
 
-// Validar asistencia del día
-router.post(
-  "/validar",
-  query("fecha").optional().isDate().withMessage("Fecha inválida"),
-  manejarErroresValidacion,
-  direccionController.validarAsistencia
-);
-
 // Enviar recordatorio manual
 router.post(
   "/recordatorio",

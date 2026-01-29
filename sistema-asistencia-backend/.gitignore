@@ -3,7 +3,7 @@ node_modules/
 
 #exports passcodes 
 /exports
-
+/docs
 # Environment variables
 .env
 .env.local

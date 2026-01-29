@@ -37,22 +37,6 @@ export default (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      validada: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-      },
-      validada_por: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        references: {
-          model: "usuarios",
-          key: "id",
-        },
-      },
-      hora_validacion: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
     },
     {
       timestamps: false,

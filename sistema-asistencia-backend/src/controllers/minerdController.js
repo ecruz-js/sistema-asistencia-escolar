@@ -28,16 +28,6 @@ export const obtenerResumen = async (req, res, next) => {
       },
     });
 
-    if (gradosCompletados < totalGrados) {
-      return errorResponse(
-        res,
-        `No se puede preparar el envío. ${
-          totalGrados - gradosCompletados
-        } grados aún no han completado la asistencia`,
-        400
-      );
-    }
-
     // Verificar si ya se envió
     const envioExistente = await db.EnvioMinerd.findOne({
       where: {
@@ -46,23 +36,60 @@ export const obtenerResumen = async (req, res, next) => {
       },
     });
 
-    if (envioExistente) {
-      return errorResponse(
-        res,
-        "Los datos de este día ya fueron enviados al Minerd",
-        400
-      );
+    // Verificar si ya existe un envío preparado (pendiente)
+    const envioPreparado = await db.EnvioMinerd.findOne({
+      where: {
+        fecha,
+        estado: "pendiente",
+      },
+      include: [
+        {
+          model: db.Usuario,
+          as: "usuarioEnvio",
+          attributes: ["id", "nombres", "primer_apellido", "segundo_apellido", "email"],
+        },
+      ],
+    });
+
+    // 🔹 FLAGS DE CONTROL
+    const puede_enviar = gradosCompletados >= totalGrados && !envioExistente;
+    const ya_enviado = !!envioExistente;
+    const tiene_envio_preparado = !!envioPreparado;
+    let mensaje = "";
+
+    if (ya_enviado) {
+      mensaje = "Los datos de este día ya fueron enviados al MINERD";
+    } else if (tiene_envio_preparado) {
+      mensaje = "Ya existe un envío preparado para esta fecha. Puede confirmarlo o cancelarlo.";
+    } else if (gradosCompletados < totalGrados) {
+      mensaje = `No se puede enviar. ${totalGrados - gradosCompletados} grado(s) aún no han completado la asistencia`;
+    } else if (puede_enviar) {
+      mensaje = "Todos los grados completados. Listo para enviar al MINERD";
     }
 
-    // Preparar datos
-    const datos = await minerdService.prepararDatos(fecha);
+    // Preparar datos (solo si no hay envío preparado, para ahorrar recursos)
+    const datos = tiene_envio_preparado
+      ? envioPreparado.datos_json
+      : await minerdService.prepararDatos(fecha);
 
     return successResponse(
       res,
       {
         fecha,
         datos,
-        advertencia: "Este es un resumen. Aún no se ha enviado al Minerd.",
+        puede_enviar,
+        ya_enviado,
+        tiene_envio_preparado,
+        envio_preparado: envioPreparado ? {
+          id: envioPreparado.id,
+          fecha: envioPreparado.fecha,
+          creado_en: envioPreparado.createdAt,
+          usuario: envioPreparado.usuarioEnvio,
+        } : null,
+        mensaje,
+        // INFO ADICIONAL
+        grados_completados: gradosCompletados,
+        total_grados: totalGrados,
       },
       "Resumen preparado"
     );
@@ -120,6 +147,22 @@ export const prepararEnvio = async (req, res, next) => {
       );
     }
 
+    // Verificar si ya existe un envío preparado (pendiente) para esta fecha
+    const envioPreparado = await db.EnvioMinerd.findOne({
+      where: {
+        fecha,
+        estado: "pendiente",
+      },
+    });
+
+    if (envioPreparado) {
+      return errorResponse(
+        res,
+        "Ya existe un envío preparado para esta fecha. Debe confirmarlo o eliminarlo antes de crear uno nuevo.",
+        400
+      );
+    }
+
     // Preparar datos
     const datos = await minerdService.prepararDatos(fecha);
 
@@ -156,6 +199,9 @@ export const confirmarYEnviar = async (req, res, next) => {
 
   try {
     const { envio_id } = req.body;
+    logger.info(
+      `Usuario ${req.usuario.email} confirmó envío al Minerd para ${envio_id}`
+    );
 
     if (!envio_id) {
       await transaction.rollback();
@@ -304,10 +350,46 @@ export const obtenerDetalle = async (req, res, next) => {
   }
 };
 
+// Cancelar un envío pendiente
+export const cancelarEnvio = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const envio = await db.EnvioMinerd.findByPk(id);
+
+    if (!envio) {
+      return errorResponse(res, "Envío no encontrado", 404);
+    }
+
+    if (envio.estado !== "pendiente") {
+      return errorResponse(
+        res,
+        `No se puede cancelar un envío en estado "${envio.estado}". Solo se pueden cancelar envíos pendientes.`,
+        400
+      );
+    }
+
+    await envio.destroy();
+
+    logger.info(
+      `Usuario ${req.usuario.email} canceló envío pendiente ID: ${id} para fecha ${envio.fecha}`
+    );
+
+    return successResponse(
+      res,
+      { fecha: envio.fecha },
+      "Envío pendiente cancelado exitosamente"
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   obtenerResumen,
   prepararEnvio,
   confirmarYEnviar,
   obtenerHistorial,
   obtenerDetalle,
+  cancelarEnvio,
 };

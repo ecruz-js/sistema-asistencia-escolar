@@ -142,12 +142,6 @@ const setupAssociations = () => {
     as: "docente",
   });
 
-  // Validador -> RegistroAsistenciaGrado
-  RegistroAsistenciaGrado.belongsTo(Usuario, {
-    foreignKey: "validada_por",
-    as: "validadoPor",
-  });
-
   // Usuario -> EnvioMinerd
   Usuario.hasMany(EnvioMinerd, {
     foreignKey: "usuario_envio_id",
