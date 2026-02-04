@@ -15,7 +15,7 @@ router.post(
   "/login",
   loginValidator,
   manejarErroresValidacion,
-  authController.login
+  authController.login 
 );
 router.post(
   "/refresh",

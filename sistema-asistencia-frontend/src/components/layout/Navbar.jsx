@@ -27,6 +27,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
 import { formatRelativeTime } from "../../utils/formatters";
 import { useLocation, useNavigate } from "react-router-dom";
+import AttendanceCalendar from "../common/ui/AttendanceCalendar";
 
 const Navbar = () => {
   const { toggleSidebar, darkMode, toggleDarkMode } = useUIStore();
@@ -138,7 +139,7 @@ const Navbar = () => {
         <div className="px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Izquierda: Toggle & Breadcrumbs */}
-            <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+            <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
               <button
                 onClick={toggleSidebar}
                 className="p-1.5 sm:p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors flex-shrink-0"
@@ -162,11 +163,10 @@ const Navbar = () => {
                     )}
                     <button
                       onClick={() => navigate(crumb.path)}
-                      className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${
-                        index === breadcrumbs.length - 1
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${index === breadcrumbs.length - 1
                           ? "font-semibold text-slate-900 dark:text-white"
                           : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
-                      }`}
+                        }`}
                     >
                       {index === 0 && <crumb.icon className="w-4 h-4" />}
                       {crumb.name}
@@ -177,11 +177,15 @@ const Navbar = () => {
             </div>
 
             {/* Derecha: Acciones */}
-            <div className="flex items-center justify-center gap-1 sm:gap-2 flex-shrink-0">
+            <div className="flex items-center justify-center gap-2 sm:gap-4 flex-shrink-0">
+
+              {/* Global Date Picker */}
+              <AttendanceCalendar />
+
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
-                className="w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all duration-200 mb-0 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                className="w-full flex items-center gap-2.5 sm:gap-4 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all duration-200 mb-0 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
               >
                 <div className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-700">
                   {darkMode ? (
@@ -195,7 +199,7 @@ const Navbar = () => {
               {/* Search Trigger */}
               <button
                 onClick={() => setShowSearch(true)}
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-transparent hover:border-slate-300 dark:hover:border-slate-600 text-xs font-medium shadow-sm"
+                className="hidden md:flex items-center gap-3 px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-transparent hover:border-slate-300 dark:hover:border-slate-600 text-xs font-medium shadow-sm"
               >
                 <Search className="w-4 h-4" />
                 <span className="opacity-70">Buscar...</span>
@@ -218,11 +222,10 @@ const Navbar = () => {
                     setShowNotifications(!showNotifications);
                     setShowUserMenu(false);
                   }}
-                  className={`p-1.5 sm:p-2 rounded-xl transition-all duration-200 relative ${
-                    showNotifications
+                  className={`p-2 sm:p-2.5 rounded-xl transition-all duration-200 relative ${showNotifications
                       ? "bg-indigo-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400"
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  }`}
+                    }`}
                 >
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                   {unreadCount > 0 && (
@@ -239,11 +242,10 @@ const Navbar = () => {
                   setShowUserMenu(!showUserMenu);
                   setShowNotifications(false);
                 }}
-                className={`flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl transition-all duration-200 ${
-                  showUserMenu
+                className={`flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl transition-all duration-200 ${showUserMenu
                     ? "bg-indigo-100 dark:bg-slate-800"
                     : "hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
+                  }`}
               >
                 <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex items-center justify-center ring-2 ring-slate-200 dark:ring-slate-700">
                   {user?.foto_ur ? (
@@ -258,8 +260,8 @@ const Navbar = () => {
                     </span>
                   )}
                 </div>
-                <span className="sm:block text-sm font-semibold text-slate-800 dark:text-slate-200">
-                  {user?.nombres}
+                <span className="hidden lg:block text-sm font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap max-w-[120px] truncate">
+                  {user?.nombres ? user.nombres.split(' ')[0] : ''}
                 </span>
               </button>
             </div>
@@ -270,18 +272,16 @@ const Navbar = () => {
       {/* --- SEARCH MODAL --- */}
       <div
         ref={searchRef}
-        className={`fixed inset-0 z-50 flex items-start justify-center transition-all duration-300 ${
-          showSearch ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-50 flex items-start justify-center transition-all duration-300 ${showSearch ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
       >
         <div
           className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-md transition-opacity"
           onClick={() => setShowSearch(false)}
         />
         <div
-          className={`relative w-full max-w-2xl mx-4 mt-16 sm:mt-24 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all duration-300 ${
-            showSearch ? "scale-100 translate-y-0" : "scale-95 -translate-y-4"
-          }`}
+          className={`relative w-full max-w-2xl mx-4 mt-16 sm:mt-24 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all duration-300 ${showSearch ? "scale-100 translate-y-0" : "scale-95 -translate-y-4"
+            }`}
         >
           {/* Search Input */}
           <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-slate-800">
@@ -370,18 +370,16 @@ const Navbar = () => {
       {/* --- NOTIFICATIONS PANEL --- */}
       <div
         ref={notificationsRef}
-        className={`fixed inset-0 z-50 transition-all duration-300 ${
-          showNotifications ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-50 transition-all duration-300 ${showNotifications ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
       >
         <div
           className="absolute inset-0 bg-slate-900/20 dark:bg-slate-950/40 backdrop-blur-sm transition-opacity"
           onClick={() => setShowNotifications(false)}
         />
         <div
-          className={`absolute right-0 top-0 h-full w-full sm:w-[380px] md:w-[400px] bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-2xl border-l border-slate-200 dark:border-slate-800 transform transition-all duration-300 ease-out ${
-            showNotifications ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`absolute right-0 top-0 h-full w-full sm:w-[380px] md:w-[400px] bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-2xl border-l border-slate-200 dark:border-slate-800 transform transition-all duration-300 ease-out ${showNotifications ? "translate-x-0" : "translate-x-full"
+            }`}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800">
@@ -423,23 +421,20 @@ const Navbar = () => {
                   <div
                     key={n.id}
                     onClick={() => markAsRead(n.id)}
-                    className={`p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors ${
-                      !n.leida ? "bg-indigo-50/30 dark:bg-indigo-900/10" : ""
-                    }`}
+                    className={`p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors ${!n.leida ? "bg-indigo-50/30 dark:bg-indigo-900/10" : ""
+                      }`}
                   >
                     <div className="flex gap-3">
                       <div
-                        className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
-                          !n.leida ? "bg-indigo-500" : "bg-transparent"
-                        }`}
+                        className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${!n.leida ? "bg-indigo-500" : "bg-transparent"
+                          }`}
                       ></div>
                       <div>
                         <p
-                          className={`text-sm mb-1 ${
-                            !n.leida
+                          className={`text-sm mb-1 ${!n.leida
                               ? "font-semibold text-slate-900 dark:text-white"
                               : "text-slate-700 dark:text-slate-300"
-                          }`}
+                            }`}
                         >
                           {n.titulo}
                         </p>
@@ -462,18 +457,16 @@ const Navbar = () => {
       {/* --- USER MENU PANEL --- */}
       <div
         ref={userMenuRef}
-        className={`fixed inset-0 z-50 transition-all duration-300 ${
-          showUserMenu ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-50 transition-all duration-300 ${showUserMenu ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
       >
         <div
           className="absolute inset-0 bg-slate-900/20 dark:bg-slate-950/40 backdrop-blur-sm transition-opacity"
           onClick={() => setShowUserMenu(false)}
         />
         <div
-          className={`absolute right-0 top-0 h-full w-full sm:w-[340px] md:w-[380px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-200 dark:border-slate-800 transform transition-all duration-300 ease-out ${
-            showUserMenu ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`absolute right-0 top-0 h-full w-full sm:w-[340px] md:w-[380px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-200 dark:border-slate-800 transform transition-all duration-300 ease-out ${showUserMenu ? "translate-x-0" : "translate-x-full"
+            }`}
         >
           {/* Header: Profile Summary */}
           <div className="relative h-36 sm:h-40 bg-slate-50 dark:bg-slate-800/50 overflow-hidden">
@@ -579,15 +572,13 @@ const Navbar = () => {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: ${
-            darkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
-          };
+          background-color: ${darkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
+        };
           border-radius: 20px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background-color: ${
-            darkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)"
-          };
+          background-color: ${darkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)"
+        };
         }
       `}</style>
     </>

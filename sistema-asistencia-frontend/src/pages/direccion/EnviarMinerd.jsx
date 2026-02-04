@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -43,6 +43,52 @@ const EnviarMinerd = () => {
 
   const resumen = resumenData?.data;
   const historial = historialData?.data?.envios || [];
+
+  // Calcular estadísticas desde los datos planos
+  const stats = useMemo(() => {
+    if (!resumen?.datos?.detalles) return null;
+
+    // Inicializar contadores
+    let totalEstudiantes = 0;
+    let totalPresentes = 0;
+
+    // Sumar desde detalles
+    resumen.datos.detalles.forEach(detalle => {
+      totalEstudiantes += (detalle.matriculasNivelInicial || 0) +
+        (detalle.matriculasNivelPrimario || 0) +
+        (detalle.matriculasNivelSecundario || 0) +
+        (detalle.matriculasNivelAdultos || 0);
+
+      totalPresentes += (detalle.presentesNivelInicial || 0) +
+        (detalle.presentesNivelPrimario || 0) +
+        (detalle.presentesNivelSecundario || 0) +
+        (detalle.presentesNivelAdultos || 0);
+    });
+
+    const totalAusentes = totalEstudiantes - totalPresentes;
+
+    return {
+      estudiantes: {
+        total: totalEstudiantes,
+        presentes: totalPresentes,
+        ausentes: totalAusentes
+      },
+      personal: {
+        docente: {
+          total: resumen.datos.personalCentro?.personalDocenteContratado || 0,
+          presentes: resumen.datos.personalCentro?.personalDocentePresente || 0,
+        },
+        administrativo: {
+          total: resumen.datos.personalCentro?.personalAdministrativoAsignado || 0,
+          presentes: resumen.datos.personalCentro?.personalAdministrativoPresente || 0,
+        },
+        monitores: {
+          total: resumen.datos.personalCentro?.monitoresAsignados || 0,
+          presentes: resumen.datos.personalCentro?.monitoresPresentes || 0,
+        }
+      }
+    };
+  }, [resumen]);
 
   // Mutación para preparar envío
   const prepararMutation = useMutation({
@@ -188,15 +234,14 @@ const EnviarMinerd = () => {
                       <span className="text-slate-700 dark:text-slate-300 wrap-break-word">
                         Preparado por:{" "}
                         <strong className="text-slate-900 dark:text-white">
-                          {resumen.envio_preparado?.usuario?.nombre}{" "}
-                          {resumen.envio_preparado?.usuario?.apellido}
+                          {resumen.envio_preparado?.usuario?.nombre_completo}
                         </strong>
                       </span>
                     </div>
                     <div className="flex items-start gap-2 text-xs sm:text-sm mt-1">
                       <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
                       <span className="text-slate-700 dark:text-slate-300 wrap-break-word">
-                        {formatDateTime(resumen.envio_preparado?.creado_en)}
+                        {formatDateTime(resumen.envio_preparado?.fecha)}
                       </span>
                     </div>
                   </div>
@@ -275,7 +320,8 @@ const EnviarMinerd = () => {
       </div>
 
       {/* Vista Previa de Datos */}
-      {resumen?.datos && (
+      {/* Vista Previa de Datos */}
+      {stats && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Datos de Estudiantes */}
           <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-sm">
@@ -288,7 +334,7 @@ const EnviarMinerd = () => {
                   Total
                 </span>
                 <span className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-                  {resumen.datos.estudiantes.total}
+                  {stats.estudiantes.total}
                 </span>
               </div>
 
@@ -298,7 +344,7 @@ const EnviarMinerd = () => {
                     Presentes
                   </p>
                   <p className="text-xl sm:text-2xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">
-                    {resumen.datos.estudiantes.presentes}
+                    {stats.estudiantes.presentes}
                   </p>
                 </div>
                 <div className="p-3 sm:p-4 bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-100 dark:border-rose-800">
@@ -306,23 +352,7 @@ const EnviarMinerd = () => {
                     Ausentes
                   </p>
                   <p className="text-xl sm:text-2xl font-bold text-rose-700 dark:text-rose-300 mt-1">
-                    {resumen.datos.estudiantes.ausentes}
-                  </p>
-                </div>
-                <div className="p-3 sm:p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800">
-                  <p className="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                    Tardanzas
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-amber-700 dark:text-amber-300 mt-1">
-                    {resumen.datos.estudiantes.tardanzas}
-                  </p>
-                </div>
-                <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
-                  <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                    Justificados
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1">
-                    {resumen.datos.estudiantes.justificados}
+                    {stats.estudiantes.ausentes}
                   </p>
                 </div>
               </div>
@@ -337,18 +367,18 @@ const EnviarMinerd = () => {
             <div className="space-y-2 sm:space-y-3">
               <PersonalResumen
                 titulo="Docentes de Aula"
-                datos={resumen.datos.personal?.docente_aula}
+                datos={stats.personal.docente}
                 color="blue"
               />
               <PersonalResumen
-                titulo="Personal Directivo"
-                datos={resumen.datos.personal?.personal_directivo}
-                color="purple"
+                titulo="Personal Administrativo"
+                datos={stats.personal.administrativo}
+                color="green"
               />
               <PersonalResumen
-                titulo="Personal Administrativo"
-                datos={resumen.datos.personal?.personal_administrativo}
-                color="green"
+                titulo="Monitores"
+                datos={stats.personal.monitores}
+                color="purple"
               />
             </div>
           </div>
@@ -622,7 +652,7 @@ const PersonalResumen = ({ titulo, datos, color }) => {
   const safeData = {
     total: datos?.total || 0,
     presentes: datos?.presentes || 0,
-    ausentes: datos?.ausentes || 0,
+    ausentes: (datos?.total || 0) - (datos?.presentes || 0),
   };
 
   return (

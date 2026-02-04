@@ -136,22 +136,25 @@ const AttendanceCalendar = () => {
   return (
     <div className="relative" ref={containerRef}>
       {/* Input Trigger (Lo que se ve siempre) */}
-      <div
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
-      >
-        <CalendarIcon className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-          {format(formatDateAsNumber(selectedDate), "EEEE, d 'de' MMMM", {
-            locale: es,
-          })}
-        </span>
-        <div
-          className={`ml-2 w-2 h-2 rounded-full ${
-            isOpen ? "bg-indigo-500" : "bg-slate-300"
+        className={`group flex items-center justify-center gap-2 h-9 sm:h-10 px-3 sm:px-4 rounded-xl border transition-all duration-200 outline-none ${isOpen
+            ? "bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm ring-2 ring-indigo-100 dark:bg-indigo-900/40 dark:border-indigo-700 dark:text-indigo-300 dark:ring-indigo-900"
+            : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm"
           }`}
-        />
-      </div>
+      >
+        <CalendarIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors" />
+        <span className="text-xs sm:text-sm font-medium whitespace-nowrap capitalize">
+          <span className="sm:hidden">
+            {format(formatDateAsNumber(selectedDate), "d MMM", { locale: es })}
+          </span>
+          <span className="hidden sm:inline">
+            {format(formatDateAsNumber(selectedDate), "EEE, d MMM", {
+              locale: es,
+            })}
+          </span>
+        </span>
+      </button>
 
       {/* Popover del Calendario */}
       {isOpen && (
